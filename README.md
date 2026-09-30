@@ -13,21 +13,29 @@ Prometheus 全家桶 + Loki + OTel 做监控日志，Tetragon/Kyverno 做安全�
 
 | 层 | 组件 | 版本 | 事实来源 |
 |---|---|---|---|
-| 网络 CNI | Cilium（加密/带宽/BGP/KPR/Hubble） | 1.20.1 | `values/cilium-values-unified.yaml` |
+| 网络 CNI | Cilium（加密/带宽/BGP/KPR/Hubble Relay+UI） | 1.20.1 | `values/cilium-values-unified.yaml` |
 | 网关 | Gateway API + Cilium Gateway | experimental CRD | `charts/gateway-api/` |
+| VIP | kube-vip（control plane 高可用） | — | 静态清单（`docs/20-系统层调整/`）|
 | DNS | NodeLocal DNSCache | — | `charts/nodelocaldns.yaml` |
+| 安装器 | KubeKey | 4.0.7-patched | `docs/10-k8s-install/` |
 | 存储 | Longhorn（1.7.2 → 1.13.0 升级链全保留） | 1.13.0 | `charts/longhorn/` + `values/longhorn-values-harbor-*.yaml` |
+| 快照 | snapshot-controller（Longhorn 配套，v8.0.1 CRD） | 8.6.0 | `scripts/20-storage/snapshot-controller.yaml` |
+| UI 认证 | nginx Basic Auth（Longhorn UI 前置反代） | 1.27-alpine | `scripts/20-storage/07-longhorn-ui-auth-proxy.sh` |
 | 监控 | kube-prometheus-stack | 62.7.0 | `values/prometheus-stack-values.yaml`（含 remoteWrite 固化） |
+| 指标 | metrics-server（CPU/内存 HPA 基础） | 0.7.2 | `scripts/40-monitoring/01-metrics-server.sh` |
 | 自定义指标 | prometheus-adapter（cpu2/mem2Gi） | 5.3.0 | `values/prometheus-adapter-values.yaml` |
-| 弹性伸缩 | KEDA | 2.21.0 | `values/keda-values.yaml` |
-| etcd 监控 | etcd SSL 指标打通 | — | `scripts/40-monitoring/04-etcd-monitoring.sh` |
-| 日志 | Loki + Alloy + Ruler（告警规则） | 6.24.0 / 0.12.0 | `values/loki-ruler*.yaml` |
-| 证书 | cert-manager | 1.16.1 | `values/cert-manager-values.yaml` |
-| 安全 | Tetragon（基线策略+Grafana 看板） | 1.7.1 | `values/tetragon-values.yaml` |
-| 策略 | Kyverno（注入代理策略） | 3.9.1 | `values/kyverno/` |
-| GitOps | ArgoCD | 3.5.3 | `scripts/70-gitops/`（待接内网 git） |
-| OTel | opentelemetry-operator | 0.123.1 | `scripts/40-monitoring/otel-*` |
-| 镜像 | Harbor 离线镜像仓 | — | `images/mirror.sh`（skopeo 全量清单） |
+| 弹性伸缩 | KEDA（外部指标/事件驱动，60+ 触发器） | 2.21.0 | `values/keda-values.yaml` |
+| etcd 监控 | etcd SSL 指标打通（静态 Endpoints+mTLS） | — | `scripts/40-monitoring/04-etcd-monitoring.sh` |
+| 日志 | Loki + Alloy + Ruler（日志告警规则） | 6.24.0 / 0.12.0 | `values/loki-ruler*.yaml` |
+| 证书 | cert-manager（内部 CA 泛域名证书） | 1.16.1 | `values/cert-manager-values.yaml` |
+| 安全 | Tetragon（eBPF 进程/文件审计+基线策略+看板） | 1.7.1 | `values/tetragon-values.yaml` |
+| 策略 | Kyverno（代理 env 自动注入/PSS 基线就绪） | 3.9.1 | `values/kyverno/` |
+| GitOps | ArgoCD（经工作站代理访问 GitHub，待接内网 Gitea） | 3.5.3 | `scripts/70-gitops/` |
+| OTel | opentelemetry-operator（链路追踪基座，后端待定 Jaeger/Tempo） | 0.159.0 | `scripts/40-monitoring/otel-*` |
+| 镜像 | Harbor 离线镜像仓（10.100.10.29，单点，建议加备份） | — | `images/mirror.sh`（skopeo 全量清单） |
+| 出口代理 | tinyproxy（.14:8888，集群外网通道，待加认证） | 1.11.0 | 系统级（`docs/00-环境清单/`） |
+| 时间 | chrony（.14 为内网 NTP 源，11 台同步） | — | `scripts/10-system/06-fix-chrony-ntp.sh` |
+| Git 源 | GitHub ssdxt/infra（本仓库）/ 内网 Gitea 待建 | — | — |
 
 ---
 
