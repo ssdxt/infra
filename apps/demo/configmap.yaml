@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-argocd-sync
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: argocd
+data:
+  role: gitops-test
