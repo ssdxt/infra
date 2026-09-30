@@ -1,0 +1,176 @@
+version: '3.7'
+
+services:
+  qwen-embedding:
+    image: omniknow:v2.0.0.1_05161110
+    container_name: qwen-embedding
+    runtime: nvidia
+    privileged: true
+    restart: always
+    shm_size: "16g"
+    networks:
+      cc-net:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "0"
+      CUDA_VISIBLE_DEVICES: "0"
+    ports:
+      - "8021:8021"
+    volumes:
+      - /ManualAI/OmniKnow/models:/ManualAI/OmniKnow/models
+      - /ManualAI/OmniKnow/bash:/ManualAI/OmniKnow/bash
+      - /ManualAI/OmniKnow/logs:/ManualAI/OmniKnow/logs
+    command:
+      - /bin/bash
+      - /ManualAI/OmniKnow/bash/start_qwen_embedding_06b.sh
+
+  qwen-rerank:
+    image: omniknow:v2.0.0.1_05161110
+    container_name: qwen-rerank
+    runtime: nvidia
+    privileged: true
+    restart: always
+    shm_size: "16g"
+    networks:
+      cc-net:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "1"
+      CUDA_VISIBLE_DEVICES: "1"
+    ports:
+      - "8022:8022"
+    volumes:
+      - /ManualAI/OmniKnow/models:/ManualAI/OmniKnow/models
+      - /ManualAI/OmniKnow/bash:/ManualAI/OmniKnow/bash
+      - /ManualAI/OmniKnow/logs:/ManualAI/OmniKnow/logs
+    command:
+      - /bin/bash
+      - /ManualAI/OmniKnow/bash/start_qwen_rerank_06b.sh
+
+  parser:
+    image: omniknow:v2.0.0.1_05161110
+    container_name: parser
+    runtime: nvidia
+    privileged: true
+    restart: always
+    shm_size: "16g"
+    networks:
+      cc-net:
+      manualai_network:
+        ipv4_address: 172.18.0.119
+    environment:
+      CUDA_VISIBLE_DEVICES: "0"
+    ports:
+      - "8010:8010"
+    volumes:
+      - /ManualAI/OmniKnow/models:/ManualAI/OmniKnow/models
+      - /ManualAI/OmniKnow/omniknow2:/ManualAI/OmniKnow/omniknow2
+      - /ManualAI/OmniKnow/bash:/ManualAI/OmniKnow/bash
+      - /ManualAI/OmniKnow/logs:/ManualAI/OmniKnow/logs
+    env_file: /ManualAI/OmniKnow/omniknow2/parser/rag/.env
+    command:
+      - /bin/bash
+      - /ManualAI/OmniKnow/bash/start_parser.sh
+
+  img_service:
+    image: omniknow:v2.0.0.1_05161110
+    container_name: img_service
+    runtime: nvidia
+    privileged: true
+    restart: always
+    shm_size: "16g"
+    networks:
+      cc-net:
+      manualai_network:
+        ipv4_address: 172.18.0.120
+    environment:
+      CUDA_VISIBLE_DEVICES: "0"
+    ports:
+      - "18080:18080"
+    volumes:
+      - /ManualAI/OmniKnow/omniknow2:/ManualAI/OmniKnow/omniknow2
+      - /ManualAI/OmniKnow/models:/ManualAI/OmniKnow/models
+      - /ManualAI/OmniKnow/bash:/ManualAI/OmniKnow/bash
+      - /ManualAI/OmniKnow/logs:/ManualAI/OmniKnow/logs
+    env_file: /ManualAI/OmniKnow/omniknow2/parser/rag/.env
+    command:
+      - /bin/bash
+      - /ManualAI/OmniKnow/bash/start_imgserver.sh
+
+  assistant:
+    image: omniknow:v2.0.0.1_05161110
+    container_name: assistant
+    stdin_open: true
+    tty: true
+    restart: always
+    ports:
+      - "8366:8366"
+    env_file: /ManualAI/OmniKnow/omniknow2/assistant/.env
+    volumes:
+      - /ManualAI/OmniKnow/omniknow2:/ManualAI/OmniKnow/omniknow2
+      - /ManualAI/OmniKnow/bash:/ManualAI/OmniKnow/bash
+      - /ManualAI/OmniKnow/logs:/ManualAI/OmniKnow/logs
+    command:
+      - /bin/bash
+      - /ManualAI/OmniKnow/bash/start_assistant.sh
+    networks:
+      manualai_network:
+        ipv4_address: 172.18.0.121
+      cc-net:
+
+  server-api:
+    image: omniknow:v2.0.0.1_05161110
+    container_name: ai_server
+    restart: always
+    ports:
+      - "8375:8375"
+    env_file: /ManualAI/OmniKnow/omniknow2/server/.env
+    command:
+      - /bin/bash
+      - /ManualAI/OmniKnow/bash/start_main.sh
+    volumes:
+      - /ManualAI/OmniKnow/omniknow2:/ManualAI/OmniKnow/omniknow2
+      - /ManualAI/OmniKnow/bash:/ManualAI/OmniKnow/bash
+      - /ManualAI/OmniKnow/logs:/ManualAI/OmniKnow/logs
+    networks:
+      manualai_network:
+        ipv4_address: 172.18.0.122
+      cc-net:
+
+  celery-worker:
+    image: omniknow:v2.0.0.1_05161110
+    container_name: ai_server_celery_worker
+    restart: always
+    command:
+      - /bin/bash
+      - /ManualAI/OmniKnow/bash/start_celery_worker.sh
+    env_file: /ManualAI/OmniKnow/omniknow2/server/.env
+    volumes:
+      - /ManualAI/OmniKnow/omniknow2:/ManualAI/OmniKnow/omniknow2
+      - /ManualAI/OmniKnow/bash:/ManualAI/OmniKnow/bash
+      - /ManualAI/OmniKnow/logs:/ManualAI/OmniKnow/logs
+    networks:
+      manualai_network:
+        ipv4_address: 172.18.0.123
+      cc-net:
+
+  celery-beat:
+    image: omniknow:v2.0.0.1_05161110
+    container_name: ai_server_celery_beat
+    restart: always
+    command:
+      - /bin/bash
+      - /ManualAI/OmniKnow/bash/start_celery_beat.sh
+    env_file: /ManualAI/OmniKnow/omniknow2/server/.env
+    volumes:
+      - /ManualAI/OmniKnow/omniknow2:/ManualAI/OmniKnow/omniknow2
+      - /ManualAI/OmniKnow/bash:/ManualAI/OmniKnow/bash
+      - /ManualAI/OmniKnow/logs:/ManualAI/OmniKnow/logs
+    networks:
+      manualai_network:
+        ipv4_address: 172.18.0.124
+      cc-net:
+
+networks:
+  cc-net:
+    external: true
+  manualai_network:
+    external: true

@@ -1,0 +1,16 @@
+﻿{
+    "10.100.10.19":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.33":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.39":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.10":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.14":  "OpenSSH_8.9 sftp=exists lib=/lib/x86_64-linux-gnu/libcrypto.so.3 svc=active sshdt=0 pkg=ii",
+    "10.100.10.44":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.29":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.31":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.46":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.34":  "OpenSSH_8.9 sftp=exists lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=failed sshdt=OpenSSL version mismatch. Built against 30000020, you have 30400000\r\n 255 pkg=ii",
+    "10.100.10.32":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.47":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.45":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc",
+    "10.100.10.41":  "OpenSSH_10.2p1 sftp=MISSING lib=/usr/local/openssl/lib64/libcrypto.so.3 svc=active sshdt=0 pkg=rc"
+}

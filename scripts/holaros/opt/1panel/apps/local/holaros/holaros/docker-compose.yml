@@ -1,0 +1,119 @@
+networks:
+    gptnetwork:
+        external: true
+        name: work_gptnetwork
+services:
+    holaros-asr:
+        container_name: holaros-asr
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        image: docker.holardata.com:5100/box/holaros-asr:v1.0
+        networks:
+            - gptnetwork
+        ports:
+            - ${ASR_PORT_HTTP}:7333
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /etc/timezone:/etc/timezone:ro
+    holaros-mysql:
+        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        container_name: holaros-mysql
+        environment:
+            MYSQL_DATABASE: holar_portal
+            MYSQL_PASSWORD: holar_mysql_root
+            MYSQL_ROOT_PASSWORD: holar_mysql_root
+            MYSQL_USER: holar
+        healthcheck:
+            interval: 5s
+            retries: 15
+            start_period: 20s
+            test:
+                - CMD-SHELL
+                - mysqladmin ping -h 127.0.0.1 -uroot -pholar_mysql_root || exit 1
+            timeout: 5s
+        image: docker.holardata.com:5100/box/mysql:8.0.40
+        networks:
+            - gptnetwork
+        ports:
+            - 3306
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /etc/timezone:/etc/timezone:ro
+            - /root/work/holaros/data/holar_mysql_data:/var/lib/mysql
+            - /root/work/holaros/data/init.d/:/docker-entrypoint-initdb.d/
+    holaros-nginx:
+        container_name: holaros-nginx
+        depends_on:
+            - holaros-portal
+        deploy:
+            resources:
+                limits:
+                    cpus: ${CPUS}
+                    memory: ${MEMORY_LIMIT}
+        image: docker.holardata.com:5100/box/nginx:1.29.4
+        networks:
+            - gptnetwork
+        ports:
+            - ${HOST_IP}:${PANEL_APP_PORT_HTTP}:80
+            - ${HOST_IP}:${PANEL_APP_PORT_HTTPS}:443
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /etc/timezone:/etc/timezone:ro
+            - /root/work/holaros/nginx.conf:/etc/nginx/nginx.conf:ro
+            - /etc/nginx/conf.d/holardata.com.pem:/etc/nginx/conf.d/holardata.com.pem:ro
+            - /etc/nginx/conf.d/holardata.com.key:/etc/nginx/conf.d/holardata.com.key:ro
+            - /root/work/holaros/conf.d/holar-portal.conf:/etc/nginx/conf.d/holar-portal.conf:ro
+            - /root/work/holaros/conf.d/empty.conf:/etc/nginx/conf.d/default.conf
+    holaros-portal:
+        container_name: holaros-portal
+        depends_on:
+            holaros-mysql:
+                condition: service_healthy
+        environment:
+            DB_HOST: holaros-mysql
+            DB_INIT_PASSWORD: holar_mysql_root
+            DB_INIT_USER: root
+            DB_NAME: holar_portal
+            DB_PASSWORD: holar_mysql_root
+            DB_PORT: 3306
+            DB_USER: holar
+            HOLAR_1PANEL_BASE_URL: http://host.docker.internal:9999
+            HOLAR_AGENT_SHELL_DEFAULT_CWD_REL: .
+            HOLAR_AGENT_SHELL_DOCKER_IMAGE: docker.holardata.com:5100/box/holaros-sandbox:v3.11
+            HOLAR_AGENT_SHELL_DOCKER_USER: 1000:1000
+            HOLAR_AGENT_SHELL_SKILLS_IMPORTED_HOST: /root/work/holaros/data/.agents/skills-imported
+            HOLAR_AGENT_SHELL_WORKSPACE_BIND_FROM: /app/holar-portal-server/data/user-workspaces-volumes
+            HOLAR_AGENT_SHELL_WORKSPACE_BIND_TO: /root/work/holaros/data/holar_app_data/user-workspaces-volumes
+            HOLAR_ASPASS_BASE_URL: http://host.docker.internal:${ASR_PORT_HTTP}
+            HOLAR_ASR_TLS_INSECURE: 1
+            HOLAR_BOOT_WHITELIST_FILE: /app/box_manager/holaros_apps_whitelist.txt
+            HOLAR_LOG_CLEANUP_ENABLED: true
+            HOLAR_LOG_DIR: /var/log
+            HOLAR_MCP_SECRET_KEY: null
+            HOLAR_PROJECT_ROOT: /app
+            LIC_SRV_URL: http://host.docker.internal:29000
+            NODE_ENV: production
+            PORT: "3080"
+            VITE_API_BASE_URL: null
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        group_add:
+            - ${DOCKER_GID}
+        image: docker.holardata.com:5100/box/holaros-portal:v3.2.5
+        networks:
+            - gptnetwork
+        privileged: true
+        restart: always
+        user: 1000:1000
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /etc/timezone:/etc/timezone:ro
+            - /root/work/holaros/data/holar_app_data:/app/holar-portal-server/data
+            - /root/work/holaros/data/holar_app_uploads:/app/holar-portal-server/uploads
+            - /root/work/holaros/data/.agents:/app/.agents
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /root/box_manager:/app/box_manager
+            - /var/log:/var/log

@@ -1,0 +1,26 @@
+# 冒烟样例：最小 OpenTelemetryCollector 实例（OTLP 收 → batch → debug 打印）
+# 注意：operator >= 0.12x 的 v1beta1 中 spec.config 是【YAML 对象】，不是字符串
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: smoke
+  namespace: opentelemetry-operator-system
+spec:
+  mode: deployment
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc: {}
+          http: {}
+    processors:
+      batch: {}
+    exporters:
+      debug:
+        verbosity: basic
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug]

@@ -1,0 +1,132 @@
+# [!NOTE]
+# Read the `docs/configuration_guide.md` carefully, and update the
+# configurations to match your specific settings and requirements.
+# - Replace `api_key` with your own credentials.
+# - Replace `base_url` and `model` name if you want to use a custom model.
+# - Set `verify_ssl` to `false` if your LLM server uses self-signed certificates
+# - A restart is required every time you change the `conf.yaml` file.
+
+# BASIC_MODEL:
+#   base_url: https://ark.cn-beijing.volces.com/api/v3
+#   model: "doubao-1-5-pro-32k-250115"
+#   api_key: xxxx
+  # max_retries: 3 # Maximum number of retries for LLM calls
+  # verify_ssl: false  # Uncomment this line to disable SSL certificate verification for self-signed certificates
+  # token_limit: 200000 # Maximum input tokens for context compression (prevents token overflow errors)
+
+# Local model configuration example:
+
+# Ollama (Tested and supported for local development)
+
+
+# BASIC_MODEL:
+#   base_url: "http://{ip}:8081/v1"  # fill in your OpenAI-compatible endpoint later
+#   model: "Qwen/Qwen3.5-35B-A3B"
+#   api_key: "EMPTY"  # fill in your API key later
+#   max_retries: 3
+
+BASIC_MODEL:
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"  # Ollama OpenAI compatible endpoint
+  model: "qwen3-next-80b-a3b-instruct"  # or "llama3.2", etc.
+  api_key: "sk-7567d5fd32bc49438810836515b5a1d0"  # Ollama doesn't need real API key
+  max_retries: 3
+
+GLM4_7_FLASH_MODEL:
+  base_url: "https://open.bigmodel.cn/api/paas/v4"  # Zhipu OpenAI-compatible endpoint
+  model: "GLM-4.7-Flash"
+  api_key: "4a9c0d66b5494e0d908729c560a56bcd.WDIqhdJOMGsOsysq"  # fill in your API key later
+  max_retries: 3
+
+QWEN3_NEXT_80B_MODEL:
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"  # fill in your OpenAI-compatible endpoint later
+  model: "qwen3-next-80b-a3b-instruct"
+  api_key: "sk-7567d5fd32bc49438810836515b5a1d0"  # fill in your API key later
+  max_retries: 3
+
+QWEN3_5_9B_MODEL:
+  base_url: "http://192.168.50.71:18809/v1"  # fill in your OpenAI-compatible endpoint later
+  model: "Qwen3.5-9B"
+  api_key: "EMPTY"  # fill in your API key later
+  max_retries: 3
+
+QWEN3_5_4B_MODEL:
+  base_url: "http://192.168.50.71:18808/v1"  # fill in your OpenAI-compatible endpoint later
+  model: "Qwen3.5-4B"
+  api_key: "EMPTY"  # fill in your API key later
+  max_retries: 3
+
+DEEPSEEK_CHAT_MODEL:
+  base_url: "https://api.deepseek.com/v1"  # fill in your OpenAI-compatible endpoint later
+  model: "deepseek-chat"
+  api_key: "sk-832d8a2c2e864d53b280cdbeb6876429"  # fill in your API key later
+  max_retries: 3
+
+DEEPSEEK_REASONER_MODEL:
+  base_url: = "https://api.deepseek.com/v1"  # fill in your OpenAI-compatible endpoint later
+  model: "deepseek-reasoner"
+  api_key: "sk-832d8a2c2e864d53b280cdbeb6876429"  # fill in your API key later
+  max_retries: 3
+
+QWEN3_30B_MODEL:
+  base_url: "https://api.modelarts-maas.com/openai/v1"  # Ollama OpenAI compatible endpoint
+  model: "qwen3-30b-a3b"  # or "llama3.2", etc.
+  api_key: "I5mlmeiEnFZWlBXZwSkotvh1vbi601xzsOazkGofG-jvzIkhxQSQKps7sAUYEotIlOX9kgVPdxt3JEYDJ9pjLA"  # Ollama doesn't need real API key
+  max_retries: 3
+
+# Reasoning model is optional.
+# Uncomment the following settings if you want to use reasoning model
+# for planning.
+
+# REASONING_MODEL:
+#   base_url: https://ark.cn-beijing.volces.com/api/v3
+#   model: "doubao-1-5-thinking-pro-m-250428"
+#   api_key: xxxx
+#   max_retries: 3 # Maximum number of retries for LLM calls
+#   token_limit: 150000 # Maximum input tokens for context compression
+
+
+# OTHER SETTINGS:
+
+# Tool-specific interrupts configuration (Issue #572)
+# Allows interrupting execution before specific tools are called.
+# Useful for reviewing sensitive operations like database queries or API calls.
+# Note: This can be overridden per-request via the API.
+# TOOL_INTERRUPTS:
+  # # List of tool names to interrupt before execution
+  # # Example: interrupt before database tools or sensitive API calls
+  # interrupt_before: 
+  #   - "db_tool"           # Database operations
+  #   - "db_read_tool"      # Database reads
+  #   - "db_write_tool"     # Database writes
+  #   - "payment_api"       # Payment-related API calls
+  #   - "admin_api"         # Administrative API calls
+  # # When interrupt is triggered, user will be prompted to approve/reject
+  # # Approved keywords: "approved", "approve", "yes", "proceed", "continue", "ok", "okay", "accepted", "accept"
+
+# Search engine configuration (Only supports Tavily currently)
+# SEARCH_ENGINE:
+#   engine: tavily
+#   # Only include results from these domains
+#   include_domains:
+#     - example.com
+#     - trusted-news.com
+#     - reliable-source.org
+#     - gov.cn
+#     - edu.cn
+#   # Exclude results from these domains
+#   exclude_domains:
+#     - example.com
+#   # Include an answer in the search results
+#   include_answer: false
+#   # Search depth: "basic" or "advanced"
+#   search_depth: "advanced"
+#   # Include raw content from pages
+#   include_raw_content: true
+#   # Include images in search results
+#   include_images: true
+#   # Include descriptions for images
+#   include_image_descriptions: true
+#   # Minimum score threshold for results (0-1)
+#   min_score_threshold: 0.0
+#   # Maximum content length per page
+#   max_content_length_per_page: 4000

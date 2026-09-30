@@ -1,0 +1,44 @@
+version: '3.7'
+
+services:
+  qwen-nvidia-vllm:
+    image: ghcr.io/nvidia-ai-iot/vllm:latest-jetson-orin
+    container_name: qwen-nvidia-vllm
+    runtime: nvidia
+    privileged: true
+    restart: always
+    shm_size: "16g"
+    ipc: host
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "8020:8020"
+    volumes:
+      - /ManualAI/.cache:/ManualAI/.cache
+      - /ManualAI/models:/ManualAI/models
+    command: >
+      vllm serve /ManualAI/models/Qwen3.5-9B-AWQ
+      --served-model-name Qwen3.5
+      --quantization awq
+      --dtype auto
+      --host 0.0.0.0
+      --port 8020
+      --tensor-parallel-size 1
+      --max-num-seqs 8
+      --max-model-len 8192
+      --max-num-batched-tokens 2048
+      --gpu-memory-utilization 0.35
+      --trust-remote-code
+      --enforce-eager
+      --enable-prefix-caching
+      --block-size 32
+      --default-chat-template-kwargs '{"enable_thinking": false}'
+      --enable-auto-tool-choice
+      --tool-call-parser qwen3_xml
+    networks:
+      manualai_network:
+        ipv4_address: 172.18.0.120
+
+networks:
+  manualai_network:
+    external: true

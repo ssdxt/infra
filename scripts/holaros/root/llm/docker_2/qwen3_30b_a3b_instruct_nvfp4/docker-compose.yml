@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  llm:
+    image: vllm_0140
+    container_name: qwen3_30b_a3b_instruct_nvfp4
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    ipc: host
+    ports:
+      - "17101:17101"
+    volumes:
+      - /root/.cache/modelscope/:/root/.cache/modelscope/
+      - /dev/shm:/dev/shm
+    shm_size: 100g
+    ulimits:
+      memlock: -1
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    command: python3 -m vllm.entrypoints.openai.api_server --model /root/.cache/modelscope/hub/models/holardata/Qwen3-30B-A3B-Instruct-2507-NVFP4  --served-model-name  qwen3_30b_a3b_instruct_nvfp4 --trust-remote-code  --gpu-memory-utilization 0.4 --max-model-len 128000 --host 0.0.0.0 --port 17101 --enable-auto-tool-choice --tool-call-parser hermes
+    restart: no
+    networks:
+      - models_network
+networks:
+  models_network:
+    external: true
+    name: models_network

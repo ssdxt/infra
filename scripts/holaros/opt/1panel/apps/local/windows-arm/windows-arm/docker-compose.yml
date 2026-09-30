@@ -1,0 +1,37 @@
+networks:
+    1panel-network:
+        external: true
+services:
+    windows-arm:
+        cap_add:
+            - NET_ADMIN
+        container_name: ${CONTAINER_NAME}
+        deploy:
+            resources:
+                limits:
+                    cpus: ${CPUS}
+                    memory: ${MEMORY_LIMIT}
+        devices:
+            - /dev/kvm
+            - /dev/net/tun
+        environment:
+            CPU_CORES: ${CPU_CORES}
+            DISK_SIZE: ${DISK_SIZE}
+            KEYBOARD: ${KEYBOARD_LAYOUT}
+            LANGUAGE: ${LANGUAGE}
+            PASSWORD: ${PASSWORD}
+            RAM_SIZE: ${RAM_SIZE}
+            REGION: ${KEYBOARD_LAYOUT}
+            USERNAME: ${USERNAME}
+            VERSION: ${VERSION}
+        image: docker.holardata.com:5100/box/windows-arm64:5.14
+        labels:
+            createdBy: Apps
+        networks:
+            - 1panel-network
+        ports:
+            - ${HOST_IP}:${PANEL_APP_PORT_HTTP}:8006
+            - ${HOST_IP}:${RDP_PORT_HTTP}:3389/tcp
+        restart: "no"
+        volumes:
+            - /home/holaruser/windows-arm:/storage

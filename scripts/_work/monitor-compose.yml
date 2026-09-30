@@ -1,0 +1,45 @@
+name: monitor
+
+services:
+
+  npu-exporter:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/ascendai/npu-exporter:v26.1.0-openeuler24.03-linuxarm64
+    container_name: npu-exporter
+    restart: unless-stopped
+    privileged: true
+    security_opt:
+      - label=disable
+    ports:
+      - "8082:8082"
+      - "11256:11256"
+    volumes:
+      - /usr/local/Ascend/driver:/usr/local/Ascend/driver
+      - /usr/local/dcmi:/usr/local/dcmi
+      - /var/log/mindx-dl:/var/log/mindx-dl
+      - /etc/hccn.conf:/etc/hccn.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        mkdir -p /var/log/mindx-dl/npu-exporter
+        export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/add-ons:/usr/local/Ascend/driver/lib64:/usr/local/dcmi
+        echo "[entrypoint] LD_LIBRARY_PATH=$$LD_LIBRARY_PATH"
+        exec /usr/local/bin/npu-exporter -port=8082 -ip=0.0.0.0 -logFile=/var/log/mindx-dl/npu-exporter/npu-exporter.log -logLevel=0 -containerMode=docker -endpoint=/run/dockershim.sock -containerd=/run/docker/containerd/containerd.sock --enable-healthz=true --healthz-address=11256
+
+  node-exporter:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/quay.io/prometheus/node-exporter:v1.9.1-linuxarm64
+    container_name: node-exporter
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    security_opt:
+      - label=disable
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/rootfs
+      - "--collector.filesystem.mount-points-exclude=^/(dev|proc|run/credentials/.+|sys|var/lib/docker/.+|var/lib/containers/storage/.+)($$|/)"

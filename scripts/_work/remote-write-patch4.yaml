@@ -1,0 +1,30 @@
+spec:
+  remoteWrite:
+  - url: http://10.100.10.29:9091/api/v1/write
+    remoteTimeout: 60s
+    writeRelabelConfigs:
+    - action: keep
+      regex: (kubelet|node-exporter|kube-state-metrics|apiserver|etcd|kube-scheduler|kube-controller-manager|coredns|prometheus-stack-kube-prom-prometheus|prometheus-stack-kube-prom-alertmanager|prometheus-stack-kube-prom-operator)
+      sourceLabels: [job]
+    # 丢掉直方图桶(约 11.7 万序列)。必须用 .*_bucket, 不能用 _bucket$
+    # (实测 '$' 锚点在此处不生效, 无锚点写法可靠)
+    - action: drop
+      regex: '.*_bucket'
+      sourceLabels: [__name__]
+    - action: drop
+      regex: 'kubernetes_feature_enabled'
+      sourceLabels: [__name__]
+    # 丢掉派生序列, 避免与 plant01 自算的同名序列时间戳冲突(out-of-order)。
+    # 实测: 必须【一条规则一个模式】, 用 | 交替的多模式规则不生效。
+    - action: drop
+      regex: 'ALERTS'
+      sourceLabels: [__name__]
+    - action: drop
+      regex: 'ALERTS_FOR_STATE'
+      sourceLabels: [__name__]
+    - action: drop
+      regex: 'count:up0'
+      sourceLabels: [__name__]
+    - action: drop
+      regex: 'count:up1'
+      sourceLabels: [__name__]

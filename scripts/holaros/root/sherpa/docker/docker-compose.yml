@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  holar_tts_82m_16:
+    image: holar_tts_82m_16
+    container_name: holar_tts_82m
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    ipc: host
+    ports:
+      - "8001:8001"
+    volumes:
+      - /root/.cache/modelscope/:/root/.cache/modelscope/
+      - /root/sherpa/:/root/sherpa/
+      - /dev/shm:/dev/shm
+    shm_size: 20g
+    ulimits:
+      memlock: -1
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    working_dir: /root/sherpa/
+    command: bash docker_start.sh 
+    restart: no
+    networks:
+      - models_network
+networks:
+  models_network:
+    external: true
+    name: models_network
+
+

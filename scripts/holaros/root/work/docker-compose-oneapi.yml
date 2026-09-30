@@ -1,0 +1,43 @@
+version: '3.4'
+
+services:
+  one-api:
+    image: oneapi:v0.6.11
+    container_name: one-api
+    restart: always
+    command: --log-dir /app/logs
+    ports:
+      - "2300:3000"
+    volumes:
+      - ./one_api_logs:/app/logs
+      - ./one_api_data/oneapi:/data
+    environment:
+      - TIKTOKEN_CACHE_DIR=/TIKTOKEN_CACHE_DIR
+      - SQL_DSN=root:Collect%2017@tcp(mysql:3306)/one-api
+      - REDIS_CONN_STRING=redis://redis
+      - SESSION_SECRET=random12321
+      - TZ=Asia/Shanghai
+      - SYNC_FREQUENCY=20
+    depends_on:
+      - redis
+    networks:
+      - gptnetwork
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -o '\"success\":\\s*true' | awk -F: '{print $2}'" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    privileged: true
+    restart: always
+    networks:
+      - gptnetwork
+
+networks:
+  gptnetwork:
+

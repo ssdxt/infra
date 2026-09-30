@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  llm:
+    image: vllm_0113_holarfileparse
+    container_name: holarfileparse_sgl_1.2b
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    ipc: host
+    ports:
+      - "17199:17199"
+    volumes:
+      - /root/.cache/modelscope/:/root/.cache/modelscope/
+      - /dev/shm:/dev/shm
+    shm_size: 20g
+    ulimits:
+      memlock: -1
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - MINERU_MODEL_SOURCE=modelscope
+    command: mineru-openai-server --port 17199  --gpu-memory-utilization 0.12 --served-model-name holarfileparse_sgl_1.2b
+    restart: no
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - models_network
+networks:
+  models_network:
+    external: true
+    name: models_network

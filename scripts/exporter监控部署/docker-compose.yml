@@ -1,0 +1,57 @@
+name: monitor
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # npu-exporter is intentionally NOT defined here. See README.md in this folder.
+  #
+  # On this host, DCMI cannot enumerate the NPUs from inside ANY container
+  # (dcmi_get_card_list returns 0 cards), while the very same binary works
+  # perfectly when run directly on the host. Huawei's own npu-smi fails inside
+  # containers too ("npu get board type failed. ret is -9005"), and 15+ docker
+  # parameter combinations were tried without success.
+  #
+  # npu-exporter therefore runs as a host systemd service:
+  #     npu-exporter.service   ->  /opt/npu-exporter/npu-exporter  ->  :8082
+  #
+  # If the driver / container runtime is fixed later, the container form is:
+  #   npu-exporter:
+  #     image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/ascendai/npu-exporter:v26.1.0-openeuler24.03-linuxarm64
+  #     container_name: npu-exporter
+  #     restart: unless-stopped
+  #     runtime: ascend
+  #     environment:
+  #       - ASCEND_VISIBLE_DEVICES=0,1
+  #     ports:
+  #       - "8082:8082"
+  #       - "11256:11256"
+  #     volumes:
+  #       - /var/log/mindx-dl:/var/log/mindx-dl
+  #       - /var/run/docker.sock:/var/run/docker.sock
+  #     entrypoint: ["/bin/bash", "-c"]
+  #     command:
+  #       - |
+  #         mkdir -p /var/log/mindx-dl/npu-exporter
+  #         exec /usr/local/bin/npu-exporter -port=8082 -ip=0.0.0.0 -logFile=/var/log/mindx-dl/npu-exporter/npu-exporter.log -logLevel=0 -containerMode=docker -endpoint=/run/dockershim.sock -containerd=/run/docker/containerd/containerd.sock --enable-healthz=true --healthz-address=11256
+  # ---------------------------------------------------------------------------
+
+  node-exporter:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/quay.io/prometheus/node-exporter:v1.9.1-linuxarm64
+    container_name: node-exporter
+    restart: unless-stopped
+    # host network + host PID are required, otherwise the network/process
+    # collectors report the container's own namespaces instead of the host's.
+    network_mode: host
+    pid: host
+    security_opt:
+      - label=disable
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/rootfs
+      # In compose a literal $ must be written as $$ to avoid interpolation.
+      - "--collector.filesystem.mount-points-exclude=^/(dev|proc|run/credentials/.+|sys|var/lib/docker/.+|var/lib/containers/storage/.+)($$|/)"

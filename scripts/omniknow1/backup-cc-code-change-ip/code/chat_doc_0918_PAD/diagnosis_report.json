@@ -1,0 +1,224 @@
+{
+  "system_info": {
+    "error": "No module named 'paddleocr'"
+  },
+  "model_status": {
+    "layout_predictor": {
+      "loaded": true,
+      "type": "<class 'server.layout.predict_layout.YOLOLayoutPredictor'>",
+      "attributes": [
+        "class_id_to_label",
+        "model"
+      ]
+    },
+    "text_system": {
+      "loaded": true,
+      "type": "<class 'server.layout.predict_system.TextSystem'>",
+      "attributes": [
+        "args",
+        "crop_image_res_index",
+        "draw_crop_rec_res",
+        "drop_score",
+        "text_detector",
+        "text_recognizer",
+        "use_angle_cls"
+      ],
+      "text_detector": {
+        "exists": true,
+        "type": "<class 'server.layout.tools.infer.predict_det.TextDetector'>",
+        "parameters": {
+          "det_db_thresh": 0.1,
+          "det_db_box_thresh": 0.3,
+          "det_limit_side_len": 960,
+          "det_db_unclip_ratio": 1.5
+        }
+      },
+      "text_recognizer": {
+        "exists": true,
+        "type": "<class 'server.layout.tools.infer.predict_rec.TextRecognizer'>"
+      },
+      "text_classifier": {
+        "exists": false
+      },
+      "drop_score": 0.3,
+      "use_angle_cls": false
+    },
+    "table_system": {
+      "loaded": true,
+      "type": "<class 'server.layout.predict_table.TableSystem'>",
+      "attributes": [
+        "args",
+        "config",
+        "input_tensor",
+        "match",
+        "output_tensors",
+        "predictor",
+        "table_structurer",
+        "text_detector",
+        "text_recognizer"
+      ]
+    }
+  },
+  "image_analysis": {
+    "file_path": "/deploy/code/chat_doc_53/knowledge_base/测试库/content/测试1_扫描版.pdf",
+    "file_reading": {
+      "success": true,
+      "time": 3.337860107421875e-05,
+      "image_count": 1
+    },
+    "image_decoding": {
+      "success": true,
+      "time": 1.8858537673950195,
+      "is_pdf": true,
+      "page_count": 10
+    },
+    "image_quality": {
+      "shape": [
+        1464,
+        1029,
+        3
+      ],
+      "dtype": "uint8",
+      "min_val": 0.0,
+      "max_val": 255.0,
+      "brightness": 251.5574113460112,
+      "contrast": 27.274574598245803,
+      "edge_strength": 12.178291720491396,
+      "sharpness": 404.97365339578454,
+      "issues": [
+        "亮度异常"
+      ]
+    }
+  },
+  "ocr_pipeline": {
+    "original": {
+      "variant": "original",
+      "steps": {
+        "detection": {
+          "success": true,
+          "time": 21.7009015083313,
+          "boxes_count": 0,
+          "det_time_dict": 21.699893951416016
+        }
+      },
+      "success": false,
+      "error": "文本检测未找到任何文本框"
+    },
+    "grayscale": {
+      "variant": "grayscale",
+      "steps": {
+        "detection": {
+          "success": true,
+          "time": 0.0661003589630127,
+          "boxes_count": 0,
+          "det_time_dict": 0.06479024887084961
+        }
+      },
+      "success": false,
+      "error": "文本检测未找到任何文本框"
+    },
+    "resized": {
+      "variant": "resized",
+      "steps": {
+        "detection": {
+          "success": true,
+          "time": 0.05982351303100586,
+          "boxes_count": 0,
+          "det_time_dict": 0.059448957443237305
+        }
+      },
+      "success": false,
+      "error": "文本检测未找到任何文本框"
+    },
+    "enhanced": {
+      "variant": "enhanced",
+      "steps": {
+        "detection": {
+          "success": true,
+          "time": 0.062352657318115234,
+          "boxes_count": 0,
+          "det_time_dict": 0.061612844467163086
+        }
+      },
+      "success": false,
+      "error": "文本检测未找到任何文本框"
+    },
+    "binary": {
+      "variant": "binary",
+      "steps": {
+        "detection": {
+          "success": true,
+          "time": 0.062090396881103516,
+          "boxes_count": 0,
+          "det_time_dict": 0.061397552490234375
+        }
+      },
+      "success": false,
+      "error": "文本检测未找到任何文本框"
+    },
+    "denoised": {
+      "variant": "denoised",
+      "steps": {
+        "detection": {
+          "success": true,
+          "time": 0.06234288215637207,
+          "boxes_count": 0,
+          "det_time_dict": 0.06159234046936035
+        }
+      },
+      "success": false,
+      "error": "文本检测未找到任何文本框"
+    }
+  },
+  "performance_metrics": {
+    "system_memory_usage": "19.2%",
+    "process_memory_usage": "1582.25 MB",
+    "cpu_usage": "0.5%"
+  },
+  "recommendations": [
+    "所有图像预处理变体的OCR都失败，建议检查模型文件和参数设置",
+    "检查模型文件完整性和参数配置",
+    "尝试降低检测阈值参数",
+    "对输入图像进行预处理以提高质量"
+  ],
+  "model_files": {
+    "/deploy/code/chat_doc_53/server/layout/config_model": {
+      "exists": true,
+      "total_files": 15,
+      "total_size": "295.84 MB",
+      "file_types": {
+        ".txt": 3,
+        ".pt": 2,
+        ".ttf": 1,
+        ".info": 3,
+        ".pdiparams": 3,
+        ".pdmodel": 3
+      }
+    },
+    "/deploy/code/chat_doc_53/server/layout/ppocr": {
+      "exists": true,
+      "total_files": 476,
+      "total_size": "3.20 MB",
+      "file_types": {
+        ".py": 233,
+        ".pyc": 186,
+        ".txt": 51,
+        ".pkl": 1,
+        ".md": 2,
+        ".pyx": 1,
+        ".cu": 1,
+        ".cc": 1
+      }
+    },
+    "/deploy/code/chat_doc_53/server/layout/ppstructure": {
+      "exists": true,
+      "total_files": 38,
+      "total_size": "0.26 MB",
+      "file_types": {
+        ".py": 14,
+        ".md": 2,
+        ".pyc": 22
+      }
+    }
+  }
+}

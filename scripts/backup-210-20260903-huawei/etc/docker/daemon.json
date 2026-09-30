@@ -1,0 +1,54 @@
+{
+  "metrics-addr": "0.0.0.0:9323",
+  "runtimes": {
+    "nvidia": {
+      "path": "nvidia-container-runtime",
+      "runtimeArgs": []
+    }
+  },
+      "log-driver": "json-file",
+      "log-level": "warn",
+      "log-opts": {
+        "max-size": "100m",
+        "max-file": "3"
+        },
+      "data-root": "/data/docker/",
+      "registry-mirrors": [
+     "https://cr-ee.registry.cn-hangzhou-slgz-d01.res.soecloud.zjcomputility.com",
+    "https://2a6bf1988cb6428c877f723ec7530dbc.mirror.swr.myhuaweicloud.com",
+    "https://docker.m.daocloud.io",
+    "https://hub-mirror.c.163.com",
+    "https://mirror.baidubce.com",
+    "https://your_preferred_mirror",
+    "https://dockerhub.icu",
+    "https://docker.registry.cyou",
+    "https://docker-cf.registry.cyou",
+    "https://dockercf.jsdelivr.fyi",
+    "https://docker.jsdelivr.fyi",
+    "https://dockertest.jsdelivr.fyi",
+    "https://mirror.aliyuncs.com",
+    "https://dockerproxy.com",
+    "https://mirror.baidubce.com",
+    "https://docker.m.daocloud.io",
+    "https://docker.nju.edu.cn",
+    "https://docker.mirrors.sjtug.sjtu.edu.cn",
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://mirror.iscas.ac.cn",
+    "https://docker.rainbond.cc",
+    "https://docker.m.daocloud.io",
+    "https://registry.docker-cn.com",
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://hub-mirror.c.163.com",
+    "https://mirror.baidubce.com",
+    "https://ccr.ccs.tencentyun.com",
+    "https://mirror.ccs.tencentyun.com",
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://docker.anyhub.us.kg",
+    "https://dockerhub.jobcher.com",
+    "https://dockerhub.icu"
+    ],
+"insecure-registries": [
+"cr-ee.registry.cn-hangzhou-slgz-d01.res.soecloud.zjcomputility.com",
+"harbor.ssdxt.cn"
+]
+     }

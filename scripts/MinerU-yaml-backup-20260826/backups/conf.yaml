@@ -1,0 +1,15 @@
+# BASIC_MODEL:
+#   base_url: "http://{ip}:8081/v1"  # fill in your OpenAI-compatible endpoint later
+#   model: "Qwen/Qwen3.5-35B-A3B"
+#   api_key: "EMPTY"  # fill in your API key later
+#   max_retries: 3
+
+BASIC_MODEL:
+  base_url: "http://172.18.0.120:8020/v1"  # Ollama OpenAI compatible endpoint
+  model: "Qwen3.5"  # or "llama3.2", etc.
+  api_key: "sk-7567d5fd32bc49438810836515b5a1d0"  # Ollama doesn't need real API key
+  max_retries: 3
+  temperature: 0.3
+  top_p: 0.8
+
+

@@ -1,0 +1,173 @@
+version: "3.4"
+services:
+  mysql:
+    container_name: "aippt-mysql"
+    image: mysql:8.0.40
+    restart: always
+    #command: --innodb-force-recovery=1
+    volumes:
+      - /data/aippt/mysql:/var/lib/mysql
+    ports:
+      - '33306:3306'
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: "aippt@2025"
+    healthcheck:
+      # 核心健康检查命令
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s   # 每 10 秒检查一次
+      timeout: 5s     # 检查超时时间为 5 秒
+      retries: 5      # 连续失败 5 次后，将容器标记为 unhealthy
+      # start_period: 30s # 启动后 30 秒内不进行健康检查，给 MySQL 留出初始化时间
+
+
+
+
+
+  redis:
+    hostname: redis
+    container_name: "aippt-redis"
+    image: registry.holardata.com:5100/box/aippt-redis-arm:latest
+    command: redis-server --appendonly  yes --requirepass aippt@2025
+    ports:
+      - 36379:6379
+    volumes:
+      - /data/aippt/redis:/redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "aippt@2025", "ping", "--no-auth-warning"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+
+  nacos:
+    #image: nacos/nacos-server:latest
+    image: registry.holardata.com:5100/box/aippt-nacos-arm:latest
+    container_name: "aippt-nacos"
+    environment:
+      - PREFER_HOST_MODE=hostname
+      - MODE=standalone
+      - NACOS_AUTH_ENABLE=true  # 启用身份验证
+      - NACOS_AUTH_USERNAME=nacos  # Nacos 用户名
+      - NACOS_AUTH_PASSWORD=aippt@2025  # Nacos 密码
+      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
+      - NACOS_AUTH_IDENTITY_VALUE=security
+      - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123456789
+    volumes:
+      - /data/aippt/nacos/data/:/home/nacos/data
+      - /data/aippt/nacos/logs/:/home/nacos/logs
+    ports:
+      - "38848:8848"
+      - "39848:9848"
+      - "38080:8080"
+
+
+
+  agent:
+    container_name: "aippt-agent"
+    image: registry.holardata.com:5100/box/aippt-agent-all:all-fd9754
+    restart: always
+    depends_on:
+      - mysql
+      - nacos
+    volumes:
+      - /data/aippt/agent/logs:/app/runtime/logs
+      - /data/aippt/agent/agent-config.yaml:/app/configs/config.yaml
+    ports:
+      - '39005:9011'
+    command: /app/bin/server -conf=/app/configs/
+      #healthcheck:
+      #  test: ["CMD", "curl", "-f", "-X","POST", "http://localhost:9011/api/file/callback"]
+      #  interval: 30s   # 每 30 秒检查一次
+      #  timeout: 10s    # 检查超时时间为 10 秒
+      #  retries: 3      # 连续失败 3 次后，将容器标记为 unhealthy
+    #start_period: 40s # 启动后 40 秒内不进行健康检查
+
+
+
+  api:
+    container_name: "aippt-api"
+    image: registry.holardata.com:5100/box/aippt-api-all:generic-0c8e7b
+    #image: registry.holardata.com:5100/box/aippt-api-all:generic-9ffef8
+    depends_on:
+      - mysql
+      - nacos
+      - redis
+      - agent
+    restart: always
+    volumes:
+      - /data/aippt/api/CPU_ID.txt:/app/CPU_ID.txt
+      - /sys/class/dmi/id/product_uuid:/app/aippt-uuid:ro
+      #- /data/aippt/api/logs:/app/runtime/logs
+      - /data/aippt/api/api-config.yaml:/app/configs/config.yaml
+    ports:
+      - '39071:9071'
+    command: /app/bin/server -conf=/app/configs/
+
+
+
+
+  font:
+    image: registry.holardata.com:5100/box/aippt-font-all:all-6a58ec
+    container_name: "aippt-font"
+    restart: always
+    depends_on:
+      - redis
+    environment:
+      - ENV=prod
+    volumes:
+      - '/data/aippt/font/.env.prod:/app/.env.prod'
+    ports:
+      - '35000:5000'
+
+
+
+  web:
+    container_name: "aippt-web"
+    image: registry.holardata.com:5100/box/aippt-websdk-all:generic-a1a943
+    restart: always
+    volumes:
+      - /data/aippt/web/aippt.conf:/etc/nginx/vhost/aippt.conf
+    ports:
+      - '${WEB_PORT_HTTP}:80'
+  #      - '3080:80'
+  #      - '443:443'
+
+
+
+  fc:
+    container_name: "aippt-fc"
+    shm_size: 4g
+    image: registry.holardata.com:5100/box/aippt-layout-all:generic-7f6ffc
+    restart: always
+    ports:
+      - '39002:9000'
+    volumes:
+      - '/data/aippt/fc/.env.prod:/app/code/.env.prod'
+
+
+  note:
+    container_name: "aippt-note"
+    image: registry.holardata.com:5100/box/aippt-note-all:all-4aa328
+    restart: always
+    environment:
+      - JAVA_OPTS="-Xms1024m -Xmx2048m"
+      - ALLOWED_HOSTS=18.18.18.60,18.18.18.60
+    ports:
+      - 39004:8080
+
+
+
+  minio:
+    container_name: "aippt-minio"
+    image: registry.holardata.com:5100/box/aippt-minio-arm:RELEASE.2022-01-04T07-41-07Z
+    volumes:
+      - /data/aippt/minio:/data
+    environment:
+      MINIO_ACCESS_KEY: aippt
+      MINIO_SECRET_KEY: aippt@2025
+    ports:
+      - "39010:9090"
+      - "39011:9000"
+    command: server /data  --console-address ":9090"
+

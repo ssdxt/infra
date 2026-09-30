@@ -1,0 +1,21 @@
+{
+    "batchBindOnly":1,
+    "binFileName":"te_cast_72fefb4a5dc5184cbd66aa1bae30b156ab4903bdfbb1fafc077161712d818a14",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "coreType":"AiCore",
+    "deterministic":"ignore",
+    "globalworkspace_spec_workspace":{
+        "size":32,
+        "type":0
+    },
+    "kernelName":"te_cast_72fefb4a5dc5184cbd66aa1bae30b156ab4903bdfbb1fafc077161712d818a14__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF",
+    "memoryStamping":[],
+    "opParaSize":0,
+    "parameters":[
+        null,
+        null
+    ],
+    "sha256":"1f094ebb374e2bd1c5edb86eb5f77998c074e746ef6ed63bec254d52ada5f859"
+}

@@ -1,0 +1,21 @@
+spec:
+  remoteWrite:
+  - url: http://10.100.10.29:9091/api/v1/write
+    remoteTimeout: 60s
+    writeRelabelConfigs:
+    # ---- 1) 只推 10 个集群 job ----
+    - action: keep
+      regex: (kubelet|node-exporter|kube-state-metrics|apiserver|etcd|kube-scheduler|kube-controller-manager|coredns|prometheus-stack-kube-prom-prometheus|prometheus-stack-kube-prom-alertmanager|prometheus-stack-kube-prom-operator)
+      sourceLabels: [job]
+    # ---- 2) 丢掉 apiserver_* 的直方图桶(约 9 万条, 占集群 190k 序列的 47%) ----
+    #        保留 apiserver_request_total / apiserver_client_certificate_expiration_*
+    #        等计数器, KubeAPIDown / KubeClientCertificateExpiration 等告警仍可触发。
+    #        代价: KubeAPIErrorBudgetBurn 与 apiserver 延迟分位记录规则无数据(见报告)。
+    #        如需恢复这些指标, 删除下面这一条 drop 规则并重放本文件即可。
+    - action: drop
+      regex: '_bucket$'
+      sourceLabels: [__name__]
+    # ---- 3) 丢掉 kubernetes_feature_enabled(5077 条, 恒定值, 无告警价值) ----
+    - action: drop
+      regex: 'kubernetes_feature_enabled'
+      sourceLabels: [__name__]
