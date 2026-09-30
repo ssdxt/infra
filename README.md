@@ -41,6 +41,7 @@ Prometheus 全家桶 + Loki + OTel 做监控日志，Tetragon/Kyverno 做安全�
 | 外网通道 | WSL2 Ubuntu（跳板机，唯一出网环境；helm/skopeo/curl 都在此执行） | — | `docs/00-环境清单/` |
 | 工作站代理 | SakuraCat（127.0.0.1:12450；git/外网访问经此） | — | `docs/00-环境清单/` |
 | 磁盘验收 | fio（etcd/存储盘基准测试：8k+fdatasync，≥1000 IOPS 达标线） | — | `scripts/10-system/`（快盘验收） |
+| 网络验收 | iperf3（节点间带宽基准：确认百兆基线/升级后压测） | — | `docs/`（iperf3 使用参考） |
 | 配置校验 | promtool（Prometheus 配置）/ openssl（证书）/ amtool（AM 配置） | — | 各安装脚本内置 |
 | **周边基础设施** | | | |
 | 监控远端 | VictoriaMetrics（plant01:8428，remote_write 长期存储） | 2.x | `values/prometheus-stack-values.yaml` remoteWrite 段 |
