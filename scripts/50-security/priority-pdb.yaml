@@ -1,0 +1,137 @@
+# wxq PriorityClass + PDB 加固清单 2026-09-30
+# 应用: bash /data1/ssdxt/security/apply-priority-pdb.sh （幂等，跳过已存在/不健康不覆盖）
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: wxq-critical
+value: 1000000
+preemptionPolicy: PreemptLowerPriority
+globalDefault: false
+description: "wxq critical - 集群核心链路组件"
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: wxq-high
+value: 100000
+preemptionPolicy: PreemptLowerPriority
+globalDefault: false
+description: "wxq high - 关键业务/观测组件"
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: wxq-default
+value: 0
+preemptionPolicy: PreemptLowerPriority
+globalDefault: false
+description: "wxq default - 一般组件显式基线"
+---
+# kube-system
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wxq-cilium
+  namespace: kube-system
+spec:
+  minAvailable: 90%
+  selector:
+    matchLabels:
+      k8s-app: cilium
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wxq-coredns
+  namespace: kube-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      k8s-app: kube-dns
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wxq-metrics-server
+  namespace: kube-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+---
+# monitoring
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wxq-kube-state-metrics
+  namespace: monitoring
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: prometheus-stack
+      app.kubernetes.io/name: kube-state-metrics
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wxq-prometheus-adapter
+  namespace: monitoring
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: prometheus-adapter
+      app.kubernetes.io/name: prometheus-adapter
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wxq-grafana
+  namespace: monitoring
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: prometheus-stack
+      app.kubernetes.io/name: grafana
+---
+# argocd
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wxq-argocd-repo-server
+  namespace: argocd
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-repo-server
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wxq-argocd-server
+  namespace: argocd
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-server
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wxq-argocd-application-controller
+  namespace: argocd
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-application-controller
+# 注：logging/loki-0 为单副本 StatefulSet，PDB 意义有限，未建（副本扩容后可补 minAvailable:1）
+# 注：longhorn-system 升级中跳过。升级完成后待补：
+#   csi-attacher / csi-provisioner / csi-resizer / csi-snapshotter (minAvailable 2)、longhorn-manager (minAvailable 1)

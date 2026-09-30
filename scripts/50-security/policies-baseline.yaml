@@ -1,0 +1,107 @@
+# ============================================================
+# Tetragon 基线安全策略包（开箱观察基线，全部 observe 不阻断）
+# 适用：Tetragon 1.7.1 / K8s 1.37 / cilium.io/v1alpha1 CRD
+# 注意：1.7.x CRD 中 message 位于 kprobes[] 级；matchArgs 用 values 列表；
+#       execve 需写 sys_execve（syscall: true 自动展开为 __x64_sys_execve）
+# ============================================================
+
+# --- 1) 集群级：敏感文件访问监控（warning 级事件）---
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: sensitive-file-shadow
+spec:
+  kprobes:
+  - call: "security_file_permission"
+    syscall: false
+    message: "sensitive file access: /etc/shadow"
+    args:
+    - index: 0
+      type: "file"
+    - index: 1
+      type: "int"
+    selectors:
+    - matchArgs:
+      - index: 0
+        operator: "Equal"
+        values:
+        - "/etc/shadow"
+---
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: sensitive-file-sudoers
+spec:
+  kprobes:
+  - call: "security_file_permission"
+    syscall: false
+    message: "sensitive file access: /etc/sudoers"
+    args:
+    - index: 0
+      type: "file"
+    - index: 1
+      type: "int"
+    selectors:
+    - matchArgs:
+      - index: 0
+        operator: "Equal"
+        values:
+        - "/etc/sudoers"
+---
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: sensitive-file-kubernetes-dir
+spec:
+  kprobes:
+  - call: "security_file_permission"
+    syscall: false
+    message: "sensitive file access: /etc/kubernetes/"
+    args:
+    - index: 0
+      type: "file"
+    - index: 1
+      type: "int"
+    selectors:
+    - matchArgs:
+      - index: 0
+        operator: "Prefix"
+        values:
+        - "/etc/kubernetes/"
+---
+# --- 2) 命名空间级：关键命名空间 shell 执行观察（info，观察为主）---
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicyNamespaced
+metadata:
+  name: shell-exec-kube-system
+  namespace: kube-system
+spec:
+  kprobes:
+  - call: "sys_execve"
+    syscall: true
+    message: "execve in kube-system (info, observe-only)"
+    args:
+    - index: 0
+      type: "char_buf"
+      sizeArgIndex: 1
+    - index: 1
+      type: "char_buf"
+      sizeArgIndex: 1
+---
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicyNamespaced
+metadata:
+  name: shell-exec-monitoring
+  namespace: monitoring
+spec:
+  kprobes:
+  - call: "sys_execve"
+    syscall: true
+    message: "execve in monitoring (info, observe-only)"
+    args:
+    - index: 0
+      type: "char_buf"
+      sizeArgIndex: 1
+    - index: 1
+      type: "char_buf"
+      sizeArgIndex: 1

@@ -1,0 +1,20 @@
+# Loki Ruler 配置增量（chart loki-6.24.0：ruler 段须走 loki.rulerConfig 合并）
+# 2026-09-30 首次落地；告警走 plant01 Alertmanager(10.100.10.29:9093) 转发钉钉
+# 规则来源：ConfigMap label loki_rule=1 → chart 自带 loki-sc-rules sidecar 同步到共享卷 sc-rules-volume
+# 坑：chart 只把 sc-rules-volume 挂进 sidecar，loki 容器 rootfs 只读，必须手动补挂到 /rules
+loki:
+  rulerConfig:
+    storage:
+      type: local
+      local:
+        directory: /rules
+    rule_path: /tmp/loki/scratch
+    alertmanager_url: http://10.100.10.29:9093
+    enable_api: true
+    ring:
+      kvstore:
+        store: inmemory
+singleBinary:
+  extraVolumeMounts:
+  - name: sc-rules-volume
+    mountPath: /rules

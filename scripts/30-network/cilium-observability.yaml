@@ -1,0 +1,138 @@
+# cilium-observability.yaml —— cilium/envoy 指标接入 kube-prometheus-stack + Hubble UI 域名入口
+apiVersion: v1
+kind: Service
+metadata:
+  name: cilium-envoy-metrics
+  namespace: kube-system
+  labels:
+    app: cilium-envoy-metrics
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    k8s-app: cilium-envoy
+  ports:
+  - name: envoy-metrics
+    port: 9964
+    targetPort: 9964
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cilium-agent-metrics
+  namespace: kube-system
+  labels:
+    app: cilium-agent-metrics
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    k8s-app: cilium
+  ports:
+  - name: agent-metrics
+    port: 9962
+    targetPort: 9962
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cilium-operator-metrics
+  namespace: kube-system
+  labels:
+    app: cilium-operator-metrics
+spec:
+  type: ClusterIP
+  selector:
+    io.cilium/app: operator
+  ports:
+  - name: operator-metrics
+    port: 9963
+    targetPort: 9963
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cilium-envoy
+  namespace: kube-system
+  labels:
+    release: prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: cilium-envoy-metrics
+  namespaceSelector:
+    matchNames: [kube-system]
+  endpoints:
+  - port: envoy-metrics
+    interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cilium-agent
+  namespace: kube-system
+  labels:
+    release: prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: cilium-agent-metrics
+  namespaceSelector:
+    matchNames: [kube-system]
+  endpoints:
+  - port: agent-metrics
+    interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cilium-operator
+  namespace: kube-system
+  labels:
+    release: prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: cilium-operator-metrics
+  namespaceSelector:
+    matchNames: [kube-system]
+  endpoints:
+  - port: operator-metrics
+    interval: 30s
+---
+# Hubble UI 域名入口：HTTPRoute 直引 kube-system 真服务（需下方 ReferenceGrant）
+# 注：不要用 ExternalName 别名——Cilium Gateway 对 ExternalName 后端解析不稳定（实测 503）
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-gateway-ns
+  namespace: kube-system
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: gateway
+  to:
+  - group: ""
+    kind: Service
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: hubble-route
+  namespace: gateway
+spec:
+  parentRefs:
+  - name: monitoring-gateway
+    sectionName: https
+  hostnames:
+  - hubble.wuxing.local
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect: {scheme: https, port: 32298, statusCode: 301}
+  - backendRefs:
+    - name: hubble-ui
+      namespace: kube-system
+      port: 80
+      kind: Service

@@ -1,0 +1,22 @@
+# opentelemetry-operator 离线 values（镜像指向本地 Harbor）
+# chart: opentelemetry-operator-0.123.1 (app version 0.159.0)
+manager:
+  image:
+    repository: harbor.wuxing.local/otel/opentelemetry-operator
+    tag: 0.159.0
+  # 创建 OpenTelemetryCollector 实例时 operator 使用的 collector 镜像
+  collectorImage:
+    repository: harbor.wuxing.local/otel/opentelemetry-collector-k8s
+    tag: 0.159.0
+  # 【后补调整·关键】关闭两个 networkpolicy gate：
+  # operator 会自建 NetworkPolicy，egress 只放行 EndpointSlice 里发现的 apiserver 真实 IP:6443，
+  # 不放行 ClusterIP 10.233.0.1:443（operator 掉线）；
+  # ingress 只放行 9443/8443，kube-apiserver 经 ClusterIP:443 调 webhook 也会被拒
+  # （apply otelcol 时报 failed calling webhook ... operation not permitted）。
+  # 本集群环境下必须全关。
+  featureGatesMap:
+    operand.networkpolicy: false
+    operator.networkpolicy: false
+admissionWebhooks:
+  certManager:
+    enabled: true   # cert-manager 1.16.1 已在集群中，保持默认

@@ -1,0 +1,70 @@
+{
+ "spec": {
+  "remoteWrite": [
+   {
+    "queueConfig": {
+     "batchSendDeadline": "60s",
+     "maxBackoff": "30s",
+     "maxSamplesPerSend": 2000,
+     "maxShards": 1,
+     "minBackoff": "500ms",
+     "minShards": 1,
+     "sampleAgeLimit": "1h"
+    },
+    "remoteTimeout": "60s",
+    "url": "http://10.100.10.29:9091/api/v1/write",
+    "writeRelabelConfigs": [
+     {
+      "action": "keep",
+      "regex": "(kubelet|node-exporter|kube-state-metrics|apiserver|etcd|kube-scheduler|kube-controller-manager|coredns|prometheus-stack-kube-prom-prometheus|prometheus-stack-kube-prom-alertmanager|prometheus-stack-kube-<GRAFANA_PASSWORD>)",
+      "sourceLabels": [
+       "job"
+      ]
+     },
+     {
+      "action": "drop",
+      "regex": ".*_bucket",
+      "sourceLabels": [
+       "__name__"
+      ]
+     },
+     {
+      "action": "drop",
+      "regex": "kubernetes_feature_enabled",
+      "sourceLabels": [
+       "__name__"
+      ]
+     },
+     {
+      "action": "drop",
+      "regex": "ALERTS",
+      "sourceLabels": [
+       "__name__"
+      ]
+     },
+     {
+      "action": "drop",
+      "regex": "ALERTS_FOR_STATE",
+      "sourceLabels": [
+       "__name__"
+      ]
+     },
+     {
+      "action": "drop",
+      "regex": "count:up0",
+      "sourceLabels": [
+       "__name__"
+      ]
+     },
+     {
+      "action": "drop",
+      "regex": "count:up1",
+      "sourceLabels": [
+       "__name__"
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

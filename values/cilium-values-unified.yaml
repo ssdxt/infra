@@ -1,0 +1,1619 @@
+# ============================================================================
+# cilium-values-unified.yaml ?? Cilium ???????single source of truth?
+# ???2026-09-30?helm get values -a ????? + ?????encryption=wireguard /
+#   bandwidthManager / egressGateway / bgpControlPlane?+ bpf.masquerade +
+#   operator.image.override + ?? useDigest: false?Harbor ????????
+# ?????????????????????? kk-full/30-???CNI/cilium-full-stack.md??
+#   1) helm upgrade cilium /data1/ssdxt/charts/cilium-1.20.1.tgz -n kube-system \
+#        -f /data1/ssdxt/values/cilium-values-unified.yaml --timeout 3m
+#      ???? --wait?chart ? operator ?????? cilium-operator-generic?
+#       Harbor ????????--wait ?????? ready ?????
+#   2) kubectl -n kube-system patch deploy cilium-operator --type json \
+#        -p '[{"op":"replace","path":"/spec/template/spec/containers/0/command/0","value":"cilium-operator"}]'
+#   3) kubectl -n kube-system patch svc hubble-peer -p '{"spec":{"internalTrafficPolicy":"Cluster"}}'
+#   4) ?? gateway svc nodePort?port-443=32298/port-80=32299?????????? patch
+#   5) ???????????
+# ============================================================================
+MTU: 0
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchLabels:
+          k8s-app: cilium
+      topologyKey: kubernetes.io/hostname
+agent: true
+agentNotReadyTaintKey: node.cilium.io/agent-not-ready
+aksbyocni:
+  enabled: false
+alibabacloud:
+  enabled: false
+  nodeSpec:
+    securityGroupTags: []
+    securityGroups: []
+    vSwitchTags: []
+    vSwitches: []
+annotateK8sNode: false
+annotations: {}
+apiRateLimit: null
+authentication:
+  enabled: false
+  gcInterval: 5m0s
+  mutual:
+    connectTimeout: 5s
+    port: 4250
+    spire:
+      adminSocketPath: /run/spire/sockets/admin.sock
+      agentSocketPath: /run/spire/sockets/agent/agent.sock
+      annotations: {}
+      connectionTimeout: 30s
+      enabled: false
+      install:
+        agent:
+          affinity: {}
+          annotations: {}
+          image:
+            digest: sha256:1d042e4040466686e0ee46f74981ff2167c86adfadca19b3835946f4d6047536
+            override: null
+            pullPolicy: IfNotPresent
+            repository: harbor.wuxing.local/spiffe/spire-agent
+            tag: 1.15.2
+            useDigest: false
+          labels: {}
+          nodeSelector: {}
+          podSecurityContext: {}
+          priorityClassName: ""
+          resources: {}
+          securityContext: {}
+          serviceAccount:
+            create: true
+            name: spire-agent
+          skipKubeletVerification: true
+          tolerations:
+          - effect: NoSchedule
+            key: node.kubernetes.io/not-ready
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/master
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/control-plane
+          - effect: NoSchedule
+            key: node.cloudprovider.kubernetes.io/uninitialized
+            value: "true"
+          - key: CriticalAddonsOnly
+            operator: Exists
+        enabled: true
+        existingNamespace: false
+        initImage:
+          digest: sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616
+          override: null
+          pullPolicy: IfNotPresent
+          repository: harbor.wuxing.local/library/busybox
+          tag: 1.38.0
+          useDigest: false
+        namespace: cilium-spire
+        server:
+          affinity: {}
+          annotations: {}
+          ca:
+            keyType: rsa-4096
+            subject:
+              commonName: Cilium SPIRE CA
+              country: US
+              organization: SPIRE
+          dataStorage:
+            accessMode: ReadWriteOnce
+            enabled: true
+            size: 1Gi
+            storageClass: null
+          image:
+            digest: sha256:aa74ef1be86bc8e0684007d84a4d9859d294384d842c30425048d73429f3216e
+            override: null
+            pullPolicy: IfNotPresent
+            repository: harbor.wuxing.local/spiffe/spire-server
+            tag: 1.15.2
+            useDigest: false
+          initContainers: []
+          labels: {}
+          nodeSelector: {}
+          podSecurityContext: {}
+          priorityClassName: ""
+          resources: {}
+          securityContext: {}
+          service:
+            annotations: {}
+            labels: {}
+            type: ClusterIP
+          serviceAccount:
+            create: true
+            name: spire-server
+          tolerations: []
+      serverAddress: null
+      trustDomain: spiffe.cilium
+  queueSize: 1024
+  rotatedIdentitiesQueueSize: 1024
+autoDirectNodeRoutes: false
+azure:
+  enabled: false
+  nodeSpec:
+    azureInterfaceName: ""
+bandwidthManager:
+  bbr: false
+  bbrHostNamespaceOnly: false
+  enabled: true
+bgpControlPlane:
+  enabled: true
+  legacyOriginAttribute:
+    enabled: false
+  routerIDAllocation:
+    ipPool: ""
+    mode: default
+  secretsNamespace:
+    create: false
+    name: kube-system
+  statusReport:
+    enabled: true
+bpf:
+  authMapMax: null
+  autoMount:
+    enabled: true
+  ctAccounting: false
+  ctAnyMax: null
+  ctTcpMax: null
+  datapathMode: veth
+  disableExternalIPMitigation: false
+  distributedLRU:
+    enabled: false
+  enableTCX: true
+  events:
+    default:
+      burstLimit: null
+      rateLimit: null
+    drop:
+      enabled: true
+    policyVerdict:
+      enabled: true
+    trace:
+      enabled: true
+  hostLegacyRouting: null
+  lbAlgorithmAnnotation: false
+  lbExternalClusterIP: false
+  lbMapMax: 65536
+  lbModeAnnotation: false
+  lbSourceRangeAllTypes: false
+  mapDynamicSizeRatio: null
+  masquerade: true
+  monitorAggregation: medium
+  monitorFlags: all
+  monitorInterval: 5s
+  monitorTraceIPOption: 0
+  natMax: null
+  neighMax: null
+  nodeMapMax: null
+  policyMapMax: 16384
+  policyMapPressureMetricsThreshold: null
+  policyStatsMapMax: 65536
+  preallocateMaps: false
+  root: /sys/fs/bpf
+  tproxy: null
+  vlanBypass: null
+bpfClockProbe: false
+certgen:
+  affinity: {}
+  annotations:
+    cronJob: {}
+    job: {}
+  cronJob:
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+  enforceCAValidityThroughoutLeavesDuration: true
+  extraVolumeMounts: []
+  extraVolumes: []
+  generateCA: true
+  image:
+    digest: sha256:6213a4c54a1f36e14a9280765f058aaa2017550c28bc122f5b09ad146fd0da2b
+    override: null
+    pullPolicy: IfNotPresent
+    repository: harbor.wuxing.local/cilium/certgen
+    tag: v0.4.9
+    useDigest: false
+  nodeSelector: {}
+  podLabels: {}
+  priorityClassName: ""
+  resources: {}
+  tolerations: []
+  ttlSecondsAfterFinished: null
+cgroup:
+  autoMount:
+    enabled: true
+    resources: {}
+  hostRoot: /run/cilium/cgroupv2
+ciliumEndpointSlice:
+  enabled: false
+  rateLimits:
+  - burst: 20
+    limit: 10
+    nodes: 0
+  - burst: 100
+    limit: 50
+    nodes: 100
+cleanBpfState: false
+cleanState: false
+cluster:
+  id: 0
+  name: default
+clustermesh:
+  annotations: {}
+  apiserver:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                k8s-app: clustermesh-apiserver
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    etcd:
+      init:
+        extraArgs: []
+        extraEnv: []
+        resources: {}
+      lifecycle: {}
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+      storageMedium: Disk
+    etcdQPS: 50
+    extraArgs: []
+    extraEnv: []
+    extraVolumeMounts: []
+    extraVolumes: []
+    healthPort: 9880
+    image:
+      digest: sha256:d905d614a332b2058cb81c193e481d1f460902b903f4eb57cc9764640b750fb5
+      override: null
+      pullPolicy: IfNotPresent
+      repository: harbor.wuxing.local/cilium/clustermesh-apiserver
+      tag: v1.20.1
+      useDigest: false
+    kvstoremesh:
+      enabled: true
+      etcdQPS: 100
+      extraArgs: []
+      extraEnv: []
+      extraVolumeMounts: []
+      healthPort: 9881
+      kvstoreMode: internal
+      lifecycle: {}
+      readinessProbe: {}
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+    lifecycle: {}
+    metrics:
+      enabled: true
+      etcd:
+        enabled: true
+        mode: basic
+        port: 9963
+      kvstoremesh:
+        enabled: true
+        port: 9964
+      port: 9962
+      serviceMonitor:
+        annotations: {}
+        enabled: false
+        etcd:
+          interval: 10s
+          metricRelabelings: null
+          relabelings: null
+          scrapeTimeout: null
+        interval: 10s
+        kvstoremesh:
+          interval: 10s
+          metricRelabelings: null
+          relabelings: null
+          scrapeTimeout: null
+        labels: {}
+        metricRelabelings: null
+        relabelings: null
+        scrapeTimeout: null
+    nodeSelector:
+      kubernetes.io/os: linux
+    podAnnotations: {}
+    podDisruptionBudget:
+      enabled: false
+      maxUnavailable: 1
+      minAvailable: null
+      unhealthyPodEvictionPolicy: null
+    podLabels: {}
+    podSecurityContext:
+      fsGroup: 65532
+      runAsGroup: 65532
+      runAsNonRoot: true
+      runAsUser: 65532
+    priorityClassName: ""
+    readinessProbe: {}
+    replicas: 1
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    service:
+      annotations: {}
+      enableSessionAffinity: HAOnly
+      externalTrafficPolicy: Cluster
+      externallyCreated: false
+      internalTrafficPolicy: Cluster
+      labels: {}
+      loadBalancerClass: null
+      loadBalancerIP: null
+      loadBalancerSourceRanges: []
+      nodePort: 32379
+      type: NodePort
+    terminationGracePeriodSeconds: 30
+    tls:
+      authMode: migration
+      auto:
+        certManagerIssuerRef: {}
+        certValidityDuration: 365
+        enabled: true
+        method: helm
+        privateKey: {}
+        schedule: 0 0 1 */4 *
+        server:
+          extraDnsNames: []
+          extraIpAddresses: []
+        subject: {}
+    tolerations: []
+    topologySpreadConstraints: []
+    updateStrategy:
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+      type: RollingUpdate
+  cacheTTL: 0s
+  config:
+    clusters: []
+    domain: mesh.cilium.io
+    enabled: false
+  defaultGlobalNamespace: true
+  enableEndpointSliceSynchronization: false
+  maxConnectedClusters: 255
+  mcsapi:
+    corednsAutoConfigure:
+      affinity: {}
+      annotations: {}
+      coredns:
+        clusterDomain: cluster.local
+        clustersetDomain: clusterset.local
+        configMapName: coredns
+        deploymentName: coredns
+        namespace: kube-system
+        serviceAccountName: coredns
+      enabled: false
+      extraArgs: []
+      extraVolumeMounts: []
+      extraVolumes: []
+      nodeSelector: {}
+      podLabels: {}
+      priorityClassName: ""
+      resources: {}
+      tolerations: []
+      ttlSecondsAfterFinished: 1800
+    enabled: false
+    installCRDs: true
+  policyDefaultLocalCluster: true
+  useAPIServer: false
+cni:
+  binPath: /opt/cni/bin
+  chainingMode: null
+  chainingTarget: null
+  confFileMountPath: /tmp/cni-configuration
+  confPath: /etc/cni/net.d
+  configMap: ""
+  configMapKey: cni-config
+  customConf: false
+  enableRouteMTUForCNIChaining: false
+  exclusive: true
+  hostConfDirMountPath: /host/etc/cni/net.d
+  install: true
+  iptablesRemoveAWSRules: true
+  logFile: /var/run/cilium/cilium-cni.log
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 10Mi
+  uninstall: false
+commonLabels: {}
+configDriftDetection:
+  driftChecker: true
+  enabled: true
+  ignoredKeys: []
+connectivityProbeFrequencyRatio: null
+conntrackGCInterval: ""
+conntrackGCMaxInterval: ""
+crdWaitTimeout: ""
+daemon:
+  allowedConfigOverrides: null
+  blockedConfigOverrides: null
+  configSources: null
+  enableSourceIPVerification: true
+  runPath: /var/run/cilium
+dashboards:
+  annotations: {}
+  enabled: false
+  label: grafana_dashboard
+  labelValue: "1"
+  namespace: null
+datapathPlugins:
+  enabled: false
+  stateDir: /var/run/cilium/plugins
+debug:
+  enabled: false
+  metricsSamplingInterval: 5m
+  verbose: null
+defaultLBServiceIPAM: lbipam
+devices: ""
+directRoutingSkipUnreachable: false
+disableEndpointCRD: false
+dnsPolicy: ""
+dnsProxy:
+  dnsRejectResponseCode: refused
+  enableDnsCompression: true
+  endpointMaxIpPerHostname: 1000
+  idleConnectionGracePeriod: 0s
+  maxDeferredConnectionDeletes: 10000
+  minTtl: 0
+  preAllocateIdentities: true
+  preCache: ""
+  proxyPort: 0
+  proxyResponseMaxDelay: 100ms
+  socketLingerTimeout: 10
+egressGateway:
+  enabled: true
+  reconciliationTriggerInterval: 1s
+enableCriticalPriorityClass: true
+enableIPv4BIGTCP: false
+enableIPv6BIGTCP: false
+enableIPv6Masquerade: true
+enableInternalTrafficPolicy: true
+enableLBIPAM: true
+enableMasqueradeRouteSource: false
+enableNoServiceEndpointsRoutable: true
+enableNonDefaultDenyPolicies: true
+enableXTSocketFallback: true
+encryption:
+  enabled: true
+  type: wireguard
+endpointHealthChecking:
+  enabled: true
+endpointLockdownOnMapOverflow: false
+endpointPolicyUpdateTimeoutDuration: ""
+endpointRoutes:
+  enabled: false
+eni:
+  awsEnablePrefixDelegation: false
+  awsReleaseExcessIPs: false
+  ec2APIEndpoint: ""
+  enabled: false
+  eniTags: {}
+  gcInterval: ""
+  gcTags: {}
+  iamRole: ""
+  instanceTagsFilter: []
+  nodeSpec:
+    deleteOnTermination: null
+    disablePrefixDelegation: false
+    excludeInterfaceTags: []
+    firstInterfaceIndex: null
+    securityGroupTags: []
+    securityGroups: []
+    subnetIDs: []
+    subnetTags: []
+    usePrimaryAddress: false
+  subnetIDsFilter: []
+  subnetTagsFilter: []
+envoy:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: cilium.io/no-schedule
+            operator: NotIn
+            values:
+            - "true"
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            k8s-app: cilium
+        topologyKey: kubernetes.io/hostname
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            k8s-app: cilium-envoy
+        topologyKey: kubernetes.io/hostname
+  annotations: {}
+  baseID: 0
+  bootstrapConfigMap: null
+  clusterMaxConnections: 1024
+  clusterMaxPendingRequests: 1024
+  clusterMaxRequests: 1024
+  connectTimeoutSeconds: 2
+  debug:
+    admin:
+      enabled: false
+      port: 9901
+  dnsPolicy: null
+  enabled: null
+  extraArgs: []
+  extraContainers: []
+  extraEnv: []
+  extraHostPathMounts: []
+  extraVolumeMounts: []
+  extraVolumes: []
+  healthPort: 9878
+  httpRetryCount: 3
+  httpUpstreamLingerTimeout: null
+  idleTimeoutDurationSeconds: 60
+  image:
+    digest: sha256:75b8094c7127736a2ffd2dce3945e0931cb6df21b0372ff661940eca26730b91
+    override: null
+    pullPolicy: IfNotPresent
+    repository: harbor.wuxing.local/cilium/cilium-envoy
+    tag: v1.37.5-1786810558-766ccfb37260a43e9d228837aa84ce3faf9f64e7
+    useDigest: false
+  initContainers: []
+  initialFetchTimeoutSeconds: 30
+  livenessProbe:
+    enabled: true
+    failureThreshold: 10
+    initialDelaySeconds: 0
+    periodSeconds: 30
+    timeoutSeconds: 5
+  log:
+    accessLogBufferSize: 4096
+    accessLogEnabled: true
+    defaultLevel: null
+    format: '[%Y-%m-%d %T.%e][%t][%l][%n] [%g:%#] %v'
+    format_json: null
+    path: ""
+  maxConcurrentRetries: 128
+  maxConnectionDurationSeconds: 0
+  maxGlobalDownstreamConnections: 50000
+  maxRequestsPerConnection: 0
+  minReadySeconds: 0
+  nodeLocality:
+    enabled: false
+  nodeSelector:
+    kubernetes.io/os: linux
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext:
+    appArmorProfile:
+      type: Unconfined
+  policyRestoreTimeoutDuration: null
+  priorityClassName: null
+  prometheus:
+    enabled: true
+    port: "9964"
+    serviceMonitor:
+      annotations: {}
+      enabled: false
+      interval: 10s
+      labels: {}
+      metricRelabelings: null
+      relabelings:
+      - action: replace
+        replacement: ${1}
+        sourceLabels:
+        - __meta_kubernetes_pod_node_name
+        targetLabel: node
+      scrapeTimeout: null
+  readinessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 0
+    periodSeconds: 30
+    timeoutSeconds: 5
+  resources: {}
+  rollOutPods: false
+  securityContext:
+    capabilities:
+      envoy:
+      - NET_ADMIN
+      - SYS_ADMIN
+      keepCapNetBindService: false
+    privileged: false
+    seLinuxOptions:
+      level: s0
+      type: spc_t
+  startupProbe:
+    enabled: true
+    failureThreshold: 105
+    initialDelaySeconds: 5
+    periodSeconds: 2
+    timeoutSeconds: 5
+  streamIdleTimeoutDurationSeconds: 300
+  terminationGracePeriodSeconds: 1
+  tolerations:
+  - operator: Exists
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 2
+    type: RollingUpdate
+  useOriginalSourceAddress: true
+  xdsMode: null
+  xffNumTrustedHopsL7PolicyEgress: 0
+  xffNumTrustedHopsL7PolicyIngress: 0
+envoyConfig:
+  enabled: false
+  retryInterval: 15s
+  secretsNamespace:
+    create: true
+    name: cilium-secrets
+etcd:
+  enabled: false
+  endpoints:
+  - https://CHANGE-ME:2379
+  ssl: false
+extraArgs: []
+extraConfig: {}
+extraContainers: []
+extraEnv: []
+extraHostPathMounts: []
+extraInitContainers: []
+extraVolumeMounts: []
+extraVolumes: []
+forceDeviceDetection: false
+gatewayAPI:
+  enableAlpn: false
+  enableAppProtocol: false
+  enableProxyProtocol: false
+  enabled: true
+  externalTrafficPolicy: Cluster
+  gatewayClass:
+    create: auto
+  hostNetwork:
+    enabled: false
+    nodes:
+      matchLabels: {}
+  secretsNamespace:
+    create: true
+    name: cilium-secrets
+    sync: true
+  useRemoteAddress: true
+  xffNumTrustedHops: 0
+gke:
+  enabled: false
+healthCheckICMPFailureThreshold: 3
+healthChecking: true
+healthPort: 9879
+hostFirewall:
+  enabled: false
+hubble:
+  annotations: {}
+  dropEventEmitter:
+    enabled: false
+    interval: 2m
+    reasons:
+    - auth_required
+    - policy_denied
+  enabled: true
+  export:
+    dynamic:
+      config:
+        configMapName: cilium-flowlog-config
+        content:
+        - aggregationInterval: 0s
+          excludeFilters: []
+          fieldAggregate: []
+          fieldMask: []
+          fileCompress: false
+          fileMaxBackups: 5
+          fileMaxSizeMb: 10
+          filePath: /var/run/cilium/hubble/events.log
+          includeFilters: []
+          name: all
+        createConfigMap: true
+      enabled: false
+    static:
+      aggregationInterval: 0s
+      allowList: []
+      denyList: []
+      enabled: false
+      fieldAggregate: []
+      fieldMask: []
+      fileCompress: false
+      fileMaxBackups: 5
+      fileMaxSizeMb: 10
+      filePath: /var/run/cilium/hubble/events.log
+  hostUsers: null
+  listenAddress: :4244
+  metrics:
+    dashboards:
+      annotations: {}
+      enabled: false
+      label: grafana_dashboard
+      labelValue: "1"
+      namespace: null
+    dynamic:
+      config:
+        configMapName: cilium-dynamic-metrics-config
+        content: []
+        createConfigMap: true
+      enabled: false
+    enableOpenMetrics: false
+    enabled: null
+    port: 9965
+    serviceAnnotations: {}
+    serviceMonitor:
+      annotations: {}
+      enabled: false
+      interval: 10s
+      jobLabel: ""
+      labels: {}
+      metricRelabelings: null
+      relabelings:
+      - action: replace
+        replacement: ${1}
+        sourceLabels:
+        - __meta_kubernetes_pod_node_name
+        targetLabel: node
+      scrapeTimeout: null
+      tlsConfig: {}
+    tls:
+      enabled: false
+      server:
+        cert: ""
+        existingSecret: ""
+        extraDnsNames: []
+        extraIpAddresses: []
+        key: ""
+        mtls:
+          enabled: false
+          key: ca.crt
+          name: null
+          useSecret: false
+  networkPolicyCorrelation:
+    enabled: true
+  peerService:
+    clusterDomain: cluster.local
+    targetPort: 4244
+  preferIpv6: false
+  redact:
+    enabled: false
+    http:
+      headers:
+        allow: []
+        deny: []
+      urlQuery: false
+      userInfo: true
+  relay:
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              k8s-app: cilium
+          topologyKey: kubernetes.io/hostname
+    annotations: {}
+    enabled: true
+    extraEnv: []
+    extraVolumeMounts: []
+    extraVolumes: []
+    gops:
+      enabled: true
+      port: 9893
+    image:
+      digest: sha256:59be0ae7d475ab9011a5e954618c0f27b5778b17140381425b308b55ba4917f4
+      override: null
+      pullPolicy: IfNotPresent
+      repository: harbor.wuxing.local/cilium/hubble-relay
+      tag: v1.20.1
+      useDigest: false
+    listenHost: ""
+    listenPort: "4245"
+    logOptions:
+      format: null
+      level: null
+    nodeSelector:
+      kubernetes.io/os: linux
+    podAnnotations: {}
+    podDisruptionBudget:
+      enabled: false
+      maxUnavailable: 1
+      minAvailable: null
+      unhealthyPodEvictionPolicy: null
+    podLabels: {}
+    podSecurityContext:
+      fsGroup: 65532
+      seccompProfile:
+        type: RuntimeDefault
+    pprof:
+      address: localhost
+      blockProfileRate: 0
+      enabled: false
+      mutexProfileFraction: 0
+      port: 6062
+    priorityClassName: ""
+    prometheus:
+      enabled: false
+      port: 9966
+      serviceMonitor:
+        annotations: {}
+        enabled: false
+        interval: 10s
+        labels: {}
+        metricRelabelings: null
+        relabelings: null
+        scrapeTimeout: null
+    replicas: 1
+    resources: {}
+    retryTimeout: null
+    rollOutPods: false
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: true
+      runAsGroup: 65532
+      runAsNonRoot: true
+      runAsUser: 65532
+      seccompProfile:
+        type: RuntimeDefault
+    service:
+      nodePort: 31234
+      type: ClusterIP
+    sortBufferDrainTimeout: null
+    sortBufferLenMax: null
+    terminationGracePeriodSeconds: 1
+    tls:
+      client:
+        cert: ""
+        existingSecret: ""
+        key: ""
+      server:
+        cert: ""
+        enabled: false
+        existingSecret: ""
+        extraDnsNames: []
+        extraIpAddresses: []
+        key: ""
+        mtls: false
+        relayName: ui.hubble-relay.cilium.io
+    tolerations: []
+    topologySpreadConstraints: []
+    updateStrategy:
+      rollingUpdate:
+        maxUnavailable: 1
+      type: RollingUpdate
+  skipUnknownCGroupIDs: null
+  socketPath: /var/run/cilium/hubble.sock
+  tls:
+    auto:
+      certManagerIssuerRef: {}
+      certValidityDuration: 365
+      enabled: true
+      method: helm
+      privateKey: {}
+      schedule: 0 0 1 */4 *
+      subject: {}
+    enabled: true
+    server:
+      cert: ""
+      existingSecret: ""
+      extraDnsNames: []
+      extraIpAddresses: []
+      key: ""
+  ui:
+    affinity: {}
+    annotations: {}
+    backend:
+      extraEnv: []
+      extraVolumeMounts: []
+      extraVolumes: []
+      image:
+        digest: sha256:fac0c300ae119274edca11fd89b1ad23c788792d8bc4ea2ba631c709e8d3c688
+        override: null
+        pullPolicy: IfNotPresent
+        repository: harbor.wuxing.local/cilium/hubble-ui-backend
+        tag: v0.13.5
+        useDigest: false
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+    baseUrl: /
+    enabled: true
+    frontend:
+      extraEnv: []
+      extraVolumeMounts: []
+      extraVolumes: []
+      image:
+        digest: sha256:f7d514fc54d784ed6df9d58cf0e97648b143f92b766dd1780ed3fc845bd4c516
+        override: null
+        pullPolicy: IfNotPresent
+        repository: harbor.wuxing.local/cilium/hubble-ui
+        tag: v0.13.5
+        useDigest: false
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+      server:
+        ipv6:
+          enabled: true
+    ingress:
+      annotations: {}
+      className: ""
+      enabled: false
+      hosts:
+      - chart-example.local
+      labels: {}
+      tls: []
+    labels: {}
+    nodeSelector:
+      kubernetes.io/os: linux
+    podAnnotations: {}
+    podDisruptionBudget:
+      enabled: false
+      maxUnavailable: 1
+      minAvailable: null
+      unhealthyPodEvictionPolicy: null
+    podLabels: {}
+    priorityClassName: ""
+    replicas: 1
+    rollOutPods: false
+    securityContext:
+      fsGroup: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      runAsUser: 1001
+      seccompProfile:
+        type: RuntimeDefault
+    service:
+      annotations: {}
+      labels: {}
+      nodePort: 31235
+      type: ClusterIP
+    standalone:
+      enabled: false
+      tls:
+        certsVolume: {}
+    tls:
+      client:
+        cert: ""
+        existingSecret: ""
+        key: ""
+    tmpVolume: {}
+    tolerations: []
+    topologySpreadConstraints: []
+    updateStrategy:
+      rollingUpdate:
+        maxUnavailable: 1
+      type: RollingUpdate
+identityAllocationMode: crd
+identityChangeGracePeriod: ""
+identityManagementMode: agent
+image:
+  digest: sha256:ae9ea21f7427fe24bc6ea7247eb552157a1b0a431744045d3f641545ca71d11b
+  override: null
+  pullPolicy: IfNotPresent
+  repository: harbor.wuxing.local/cilium/cilium
+  tag: v1.20.1
+  useDigest: false
+imagePullSecrets: []
+ingressController:
+  default: false
+  defaultSecretName: null
+  defaultSecretNamespace: null
+  enableProxyProtocol: false
+  enabled: false
+  enforceHttps: true
+  hostNetwork:
+    enabled: false
+    httpPort: 0
+    httpsPort: 0
+    nodes:
+      matchLabels: {}
+    sharedListenerPort: 8080
+    tlsPassthroughPort: 0
+  ingressLBAnnotationPrefixes:
+  - lbipam.cilium.io
+  - nodeipam.cilium.io
+  - service.beta.kubernetes.io
+  - service.kubernetes.io
+  - cloud.google.com
+  loadbalancerMode: dedicated
+  secretsNamespace:
+    create: true
+    name: cilium-secrets
+    sync: true
+  service:
+    allocateLoadBalancerNodePorts: null
+    annotations: {}
+    externalTrafficPolicy: Cluster
+    insecureNodePort: null
+    labels: {}
+    loadBalancerClass: null
+    loadBalancerIP: null
+    name: cilium-ingress
+    secureNodePort: null
+    type: LoadBalancer
+  useRemoteAddress: true
+  xffNumTrustedHops: 0
+initResources: {}
+installNoConntrackIptablesRules: false
+ipMasqAgent:
+  enabled: false
+ipam:
+  ciliumNodeUpdateRate: 15s
+  installUplinkRoutesForDelegatedIPAM: false
+  mode: cluster-pool
+  multiPoolPreAllocation: ""
+  nodeSpec:
+    ipamMaxAllocate: null
+    ipamMinAllocate: null
+    ipamPreAllocate: null
+    ipamStaticIPTags: []
+  operator:
+    autoCreateCiliumPodIPPools: {}
+    clusterPoolIPv4MaskSize: 24
+    clusterPoolIPv4PodCIDRList:
+    - 10.233.64.0/18
+    clusterPoolIPv6MaskSize: 120
+    clusterPoolIPv6PodCIDRList:
+    - fd00::/104
+    externalAPILimitBurstSize: null
+    externalAPILimitQPS: null
+iptablesRandomFully: false
+ipv4:
+  enabled: true
+ipv4NativeRoutingCIDR: ""
+ipv6:
+  enabled: false
+ipv6NativeRoutingCIDR: ""
+k8s:
+  apiServerURLs: null
+  requireIPv4PodCIDR: false
+  requireIPv6PodCIDR: false
+k8sClientExponentialBackoff:
+  backoffBaseSeconds: 1
+  backoffMaxDurationSeconds: 120
+  enabled: true
+k8sClientRateLimit:
+  burst: null
+  operator:
+    burst: null
+    qps: null
+  qps: null
+k8sClusterNetworkPolicy:
+  enabled: false
+k8sNetworkPolicy:
+  enabled: true
+k8sServiceHost: 10.100.10.250
+k8sServiceHostRef:
+  key: null
+  name: null
+k8sServiceLookupConfigMapName: ""
+k8sServiceLookupNamespace: ""
+k8sServicePort: 6443
+keepDeprecatedLabels: false
+keepDeprecatedProbes: false
+kubeConfigPath: ""
+kubeProxyReplacement: true
+kubeProxyReplacementHealthzBindAddr: ""
+l2NeighDiscovery:
+  enabled: false
+l2announcements:
+  enabled: false
+l2podAnnouncements:
+  enabled: false
+  interfacePattern: ""
+l7Proxy: true
+livenessProbe:
+  failureThreshold: 10
+  periodSeconds: 30
+  requireK8sConnectivity: false
+loadBalancer:
+  acceleration: disabled
+  l7:
+    algorithm: round_robin
+    backend: disabled
+    ports: []
+  serviceTopology: false
+localRedirectPolicies:
+  addressMatcherCIDRs: null
+  enabled: false
+localRedirectPolicy: false
+logSystemLoad: false
+maglev: {}
+minReadySeconds: 0
+monitor:
+  enabled: false
+name: cilium
+namespaceOverride: ""
+nat:
+  mapStatsEntries: 32
+  mapStatsInterval: 30s
+nat46x64Gateway:
+  enabled: false
+nativeRoutingCIDRFromClusterPool: false
+nodeIPAM:
+  enabled: false
+nodePort:
+  addresses: null
+  autoProtectPortRange: true
+  bindProtection: true
+  enableDynamicSourceLookup: false
+  enableHealthCheck: true
+  enableHealthCheckLoadBalancerIP: false
+nodeSelector:
+  kubernetes.io/os: linux
+nodeSelectorLabels: false
+nodeinit:
+  affinity: {}
+  annotations: {}
+  bootstrapFile: /tmp/cilium-bootstrap.d/cilium-bootstrap-time
+  enabled: false
+  extraEnv: []
+  extraVolumeMounts: []
+  extraVolumes: []
+  image:
+    digest: sha256:f99e2beda7324e93ba04d6240d9626a6b9ab023d7d56e3b029d3d9c823ce63ef
+    override: null
+    pullPolicy: IfNotPresent
+    repository: harbor.wuxing.local/cilium/startup-script
+    tag: 1782916218-36ae25f
+    useDigest: false
+  minReadySeconds: 0
+  nodeSelector:
+    kubernetes.io/os: linux
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext:
+    appArmorProfile:
+      type: Unconfined
+  prestop:
+    postScript: ""
+    preScript: ""
+  priorityClassName: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      add:
+      - SYS_MODULE
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_CHROOT
+      - SYS_PTRACE
+    privileged: false
+    seLinuxOptions:
+      level: s0
+      type: spc_t
+  startup:
+    postScript: ""
+    preScript: ""
+  tolerations:
+  - operator: Exists
+  updateStrategy:
+    type: RollingUpdate
+  waitForCloudInit: false
+operator:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            io.cilium/app: operator
+        topologyKey: kubernetes.io/hostname
+  annotations: {}
+  dashboards:
+    annotations: {}
+    enabled: false
+    label: grafana_dashboard
+    labelValue: "1"
+    namespace: null
+  dnsPolicy: ""
+  enabled: true
+  endpointGCInterval: 5m0s
+  extraArgs: []
+  extraEnv: []
+  extraHostPathMounts: []
+  extraVolumeMounts: []
+  extraVolumes: []
+  hostNetwork: true
+  hostUsers: true
+  identityGCInterval: 15m0s
+  identityHeartbeatTimeout: 30m0s
+  image:
+    alibabacloudDigest: sha256:2af5dd3d85649ea36d365363b8eca82ad06116c6259c4aace700a7c036348e4c
+    awsDigest: sha256:7cf0cb0e6584f72ca8de951a1be03829f69fcaeba69dc6c7856fc4470545acd7
+    azureDigest: sha256:13746a479ca60395df8d83580b49464c6c975cca6fdb21ba4791a076ab01b031
+    genericDigest: sha256:6c3885fc7b629099fdbe2a5c87869c86feb825fa18fae299eac0f61918d16ecf
+    override: harbor.wuxing.local/cilium/operator:v1.20.1
+    pullPolicy: IfNotPresent
+    repository: harbor.wuxing.local/cilium/operator
+    suffix: ""
+    tag: v1.20.1
+    useDigest: false
+  nodeGCInterval: 5m0s
+  nodeSelector:
+    kubernetes.io/os: linux
+  podAnnotations: {}
+  podDisruptionBudget:
+    enabled: false
+    maxUnavailable: 1
+    minAvailable: null
+    unhealthyPodEvictionPolicy: null
+  podLabels: {}
+  podSecurityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  pprof:
+    address: localhost
+    blockProfileRate: 0
+    enabled: false
+    mutexProfileFraction: 0
+    port: 6061
+  priorityClassName: ""
+  prometheus:
+    enabled: true
+    metricsService: false
+    port: 9963
+    serviceMonitor:
+      annotations: {}
+      enabled: false
+      interval: 10s
+      jobLabel: ""
+      labels: {}
+      metricRelabelings: null
+      relabelings: null
+      scrapeTimeout: null
+    tls:
+      enabled: false
+      server:
+        existingSecret: ""
+        mtls:
+          enabled: false
+  removeNodeTaints: true
+  replicas: 2
+  resources: {}
+  rollOutPods: false
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+  setNodeNetworkStatus: true
+  setNodeTaints: null
+  skipCRDCreation: false
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+  - key: node.kubernetes.io/not-ready
+    operator: Exists
+  - key: node.cloudprovider.kubernetes.io/uninitialized
+    operator: Exists
+  topologySpreadConstraints: []
+  unmanagedPodWatcher:
+    intervalSeconds: 15
+    restart: true
+    selector: null
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 50%
+    type: RollingUpdate
+pmtuDiscovery:
+  enabled: false
+  packetizationLayerPMTUDMode: blackhole
+podAnnotations: {}
+podLabels: {}
+podSecurityContext:
+  appArmorProfile:
+    type: Unconfined
+  seccompProfile:
+    type: Unconfined
+policyCIDRMatchMode: null
+policyDenyResponse: none
+policyEnforcementMode: default
+pprof:
+  address: localhost
+  blockProfileRate: 0
+  enabled: false
+  mutexProfileFraction: 0
+  port: 6060
+preferIpv6: false
+preflight:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            k8s-app: cilium
+        topologyKey: kubernetes.io/hostname
+  annotations: {}
+  enabled: false
+  envoy:
+    image:
+      digest: sha256:75b8094c7127736a2ffd2dce3945e0931cb6df21b0372ff661940eca26730b91
+      override: null
+      pullPolicy: IfNotPresent
+      repository: harbor.wuxing.local/cilium/cilium-envoy
+      tag: v1.37.5-1786810558-766ccfb37260a43e9d228837aa84ce3faf9f64e7
+      useDigest: false
+  extraEnv: []
+  extraVolumeMounts: []
+  extraVolumes: []
+  image:
+    digest: sha256:ae9ea21f7427fe24bc6ea7247eb552157a1b0a431744045d3f641545ca71d11b
+    override: null
+    pullPolicy: IfNotPresent
+    repository: harbor.wuxing.local/cilium/cilium
+    tag: v1.20.1
+    useDigest: false
+  nodeSelector:
+    kubernetes.io/os: linux
+  podAnnotations: {}
+  podDisruptionBudget:
+    enabled: false
+    maxUnavailable: 1
+    minAvailable: null
+    unhealthyPodEvictionPolicy: null
+  podLabels: {}
+  podSecurityContext: {}
+  priorityClassName: ""
+  readinessProbe:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+  resources: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+  terminationGracePeriodSeconds: 1
+  tolerations:
+  - operator: Exists
+  updateStrategy:
+    type: RollingUpdate
+  validateCNPs: true
+priorityClassName: ""
+prometheus:
+  controllerGroupMetrics:
+  - write-cni-file
+  - sync-host-ips
+  - sync-lb-maps-with-k8s-services
+  enabled: true
+  metrics: null
+  metricsService: false
+  port: 9962
+  serviceMonitor:
+    annotations: {}
+    enabled: false
+    interval: 10s
+    jobLabel: ""
+    labels: {}
+    metricRelabelings: null
+    relabelings:
+    - action: replace
+      replacement: ${1}
+      sourceLabels:
+      - __meta_kubernetes_pod_node_name
+      targetLabel: node
+    scrapeTimeout: null
+    trustCRDsExist: false
+rbac:
+  create: true
+readinessProbe:
+  failureThreshold: 3
+  periodSeconds: 30
+resourceQuotas:
+  cilium:
+    hard:
+      pods: 10k
+  enabled: false
+  operator:
+    hard:
+      pods: "15"
+resources: {}
+rollOutCiliumPods: false
+routingMode: ""
+scheduling:
+  mode: anti-affinity
+sctp:
+  enabled: false
+secretsNamespaceAnnotations: {}
+secretsNamespaceLabels: {}
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    applySysctlOverwrites:
+    - SYS_ADMIN
+    - SYS_CHROOT
+    - SYS_PTRACE
+    ciliumAgent:
+    - CHOWN
+    - KILL
+    - NET_ADMIN
+    - NET_RAW
+    - IPC_LOCK
+    - SYS_MODULE
+    - SYS_ADMIN
+    - SYS_RESOURCE
+    - DAC_OVERRIDE
+    - FOWNER
+    - SETGID
+    - SETUID
+    - SYSLOG
+    cleanCiliumState:
+    - NET_ADMIN
+    - SYS_MODULE
+    - SYS_ADMIN
+    - SYS_RESOURCE
+    mountCgroup:
+    - SYS_ADMIN
+    - SYS_CHROOT
+    - SYS_PTRACE
+  privileged: false
+  seLinuxOptions:
+    level: s0
+    type: spc_t
+serviceAccounts:
+  cilium:
+    annotations: {}
+    automount: true
+    create: true
+    name: cilium
+  clustermeshApiserver:
+    annotations: {}
+    automount: true
+    create: true
+    name: clustermesh-apiserver
+  clustermeshcertgen:
+    annotations: {}
+    automount: true
+    create: true
+    name: clustermesh-apiserver-generate-certs
+  corednsMCSAPI:
+    annotations: {}
+    automount: true
+    create: true
+    name: cilium-coredns-mcsapi-autoconfig
+  envoy:
+    annotations: {}
+    automount: true
+    create: true
+    name: cilium-envoy
+  hubblecertgen:
+    annotations: {}
+    automount: true
+    create: true
+    name: hubble-generate-certs
+  nodeinit:
+    annotations: {}
+    automount: true
+    create: true
+    enabled: false
+    name: cilium-nodeinit
+  operator:
+    annotations: {}
+    automount: true
+    create: true
+    name: cilium-operator
+  preflight:
+    annotations: {}
+    automount: true
+    create: true
+    name: cilium-pre-flight
+  relay:
+    annotations: {}
+    automount: false
+    create: true
+    name: hubble-relay
+  ui:
+    annotations: {}
+    automount: true
+    create: true
+    name: hubble-ui
+  ztunnel:
+    annotations: {}
+    automount: false
+    create: true
+    name: ztunnel-cilium
+serviceNoBackendResponse: reject
+sleepAfterInit: false
+socketLB:
+  enabled: false
+standaloneDnsProxy:
+  annotations: {}
+  automountServiceAccountToken: false
+  debug: false
+  enabled: false
+  image:
+    digest: ""
+    override: null
+    pullPolicy: IfNotPresent
+    repository: ""
+    tag: ""
+    useDigest: false
+  minReadySeconds: 5
+  nodeSelector:
+    kubernetes.io/os: linux
+  rollOutPods: false
+  serverPort: 10095
+  tolerations: []
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 0
+    type: RollingUpdate
+startupProbe:
+  failureThreshold: 300
+  periodSeconds: 2
+synchronizeK8sNodes: true
+sysctlfix:
+  enabled: true
+terminationGracePeriodSeconds: 1
+tls:
+  ca:
+    cert: ""
+    certValidityDuration: 1095
+    key: ""
+  caBundle:
+    enabled: false
+    key: ca.crt
+    name: cilium-root-ca.crt
+    useSecret: false
+  readSecretsOnlyFromSecretsNamespace: null
+  secretSync:
+    enabled: null
+  secretsBackend: null
+  secretsNamespace:
+    create: true
+    name: cilium-secrets
+tmpVolume: {}
+tolerations:
+- operator: Exists
+tunnelPort: 0
+tunnelProtocol: ""
+tunnelSourcePortRange: 0-0
+underlayProtocol: ""
+updateStrategy:
+  rollingUpdate:
+    maxUnavailable: 2
+  type: RollingUpdate
+upgradeCompatibility: null
+vtep:
+  cidr: ""
+  enabled: false
+  endpoint: ""
+  mac: ""
+  mask: ""
+waitForKubeProxy: false
+wellKnownIdentities:
+  enabled: false
+enableIPv4Masquerade: true

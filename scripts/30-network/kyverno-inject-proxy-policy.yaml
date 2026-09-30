@@ -1,0 +1,44 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: inject-proxy-env
+  annotations:
+    wxq.io/description: >-
+      为带 wxq.io/egress-proxy=enabled 标签的命名空间中的所有 Pod 自动注入出网代理环境变量（http/https_proxy + 大小写 + no_proxy）。
+      集群出网统一走 http://10.100.10.14:8888（tinyproxy）。
+spec:
+  # 只做准入期 mutate，不做后台扫描（不依赖 background-controller）
+  background: false
+  # 注入场景用 Audit（1.19 起不支持 Ignore，Audit 即"只报不阻"）：
+  # 策略求值异常时不阻塞业务 Pod 创建（宁可漏注入，不可全阻塞）
+  validationFailureAction: Audit
+  rules:
+    - name: inject-proxy-env-on-labeled-ns
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              # 只有带 wxq.io/egress-proxy=enabled 标签的命名空间才匹配本规则
+              namespaceSelector:
+                matchLabels:
+                  wxq.io/egress-proxy: enabled
+      mutate:
+        patchStrategicMerge:
+          spec:
+            containers:
+              # (name): "*" 锚点 = 匹配所有容器（strategic merge 需要 name 作 merge key）
+              - (name): "*"
+                env:
+                  - name: http_proxy
+                    value: http://10.100.10.14:8888
+                  - name: https_proxy
+                    value: http://10.100.10.14:8888
+                  - name: HTTP_PROXY
+                    value: http://10.100.10.14:8888
+                  - name: HTTPS_PROXY
+                    value: http://10.100.10.14:8888
+                  - name: no_proxy
+                    value: localhost,127.0.0.1,.svc,.svc.cluster.local,.cluster.local,10.233.0.0/16,10.96.0.0/12,10.100.10.0/24,.wuxing.local,harbor.wuxing.local,10.100.10.29,kubernetes.default
+                  - name: NO_PROXY
+                    value: localhost,127.0.0.1,.svc,.svc.cluster.local,.cluster.local,10.233.0.0/16,10.96.0.0/12,10.100.10.0/24,.wuxing.local,harbor.wuxing.local,10.100.10.29,kubernetes.default

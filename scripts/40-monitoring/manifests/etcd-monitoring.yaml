@@ -1,0 +1,60 @@
+# etcd 监控打通（方案①：静态 Endpoints + mTLS）——自建三件套，不归 helm 管
+# 背景：etcd 为 systemd 服务（非静态 Pod），chart 自带 Service/SM 匹配 0 Pod；2379 强制 mTLS
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd-monitor
+  namespace: monitoring
+  labels:
+    monitoring: etcd
+spec:
+  clusterIP: None
+  ports:
+  - name: http-metrics
+    port: 2379
+    targetPort: 2379
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: etcd-monitor
+  namespace: monitoring
+subsets:
+- addresses:
+  - ip: 10.100.10.10
+  - ip: 10.100.10.14
+  - ip: 10.100.10.19
+  ports:
+  - name: http-metrics
+    port: 2379
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: etcd-monitor
+  namespace: monitoring
+  labels:
+    release: prometheus-stack   # 匹配 Prometheus CR serviceMonitorSelector
+spec:
+  selector:
+    matchLabels:
+      monitoring: etcd
+  endpoints:
+  - port: http-metrics
+    scheme: https
+    interval: 30s
+    tlsConfig:
+      caFile: /etc/prometheus/secrets/kube-etcd-client-certs/ca.crt
+      certFile: /etc/prometheus/secrets/kube-etcd-client-certs/client.crt
+      keyFile: /etc/prometheus/secrets/kube-etcd-client-certs/client.key
+      insecureSkipVerify: true   # 内网 IP 直连，跳过主机名校验；CA 链仍校验
+    relabelings:
+    - sourceLabels: [__address__]
+      regex: '(10\.100\.10\.\d+):\d+'
+      targetLabel: node
+    - sourceLabels: [__address__]
+      targetLabel: instance
+      regex: '([^:]+):\d+'
+      replacement: '${1}'
+    - targetLabel: job
+      replacement: kube-etcd

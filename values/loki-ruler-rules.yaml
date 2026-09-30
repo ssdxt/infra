@@ -1,0 +1,31 @@
+groups:
+- name: wxq-log-alerts
+  interval: 1m
+  rules:
+  # 链路测试规则：severity=none，常驻 firing，用于验证 ruler→plant01 Alertmanager 链路，不进钉钉路由
+  - alert: WxqRulerLinkTest
+    expr: sum(count_over_time({namespace=~".+",namespace!="tetragon"} [5m])) > -1
+    for: 0m
+    labels:
+      severity: none
+    annotations:
+      summary: "ruler 链路测试（常驻，勿处理）"
+  # 正式规则 1：某命名空间 5 分钟 error 日志 > 500 条
+  - alert: WxqLogErrorBurst
+    expr: sum by (namespace) (count_over_time({namespace=~".+",namespace!="tetragon",pod!~"coredns.*|nodelocaldns.*"} |~ "(?i)error" [5m])) > 500
+    for: 0m
+    labels:
+      severity: warning
+      namespace: "{{ $labels.namespace }}"
+    annotations:
+      summary: "命名空间 {{ $labels.namespace }} 5分钟内 error 日志超过 500 条"
+      description: "当前值: {{ $value }} 条/5m，请检查该命名空间应用日志"
+  # 正式规则 2：5 分钟内出现 OOMKilled 字样日志 > 10 条
+  - alert: WxqOOMKilledDetected
+    expr: sum(count_over_time({namespace=~".+",namespace!="tetragon"} |~ "OOMKilled" [5m])) > 10
+    for: 0m
+    labels:
+      severity: warning
+    annotations:
+      summary: "检测到 OOMKilled 日志爆发"
+      description: "5 分钟内匹配 OOMKilled 的日志 {{ $value }} 条 (>10)，可能有容器内存不足"

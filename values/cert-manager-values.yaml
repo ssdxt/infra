@@ -1,0 +1,13 @@
+cainjector:
+  image:
+    repository: harbor.wuxing.local/cert-manager/cert-manager-cainjector
+crds:
+  enabled: true
+image:
+  repository: harbor.wuxing.local/cert-manager/cert-manager-controller
+startupapicheck:
+  image:
+    repository: harbor.wuxing.local/cert-manager/cert-manager-startupapicheck
+webhook:
+  image:
+    repository: harbor.wuxing.local/cert-manager/cert-manager-webhook

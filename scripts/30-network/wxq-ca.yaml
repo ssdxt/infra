@@ -1,0 +1,44 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: wxq-selfsigned-bootstrap
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wxq-root-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  duration: 87600h
+  secretName: wxq-root-ca
+  commonName: wxq-local-root-ca
+  issuerRef:
+    name: wxq-selfsigned-bootstrap
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: wxq-ca
+spec:
+  ca:
+    secretName: wxq-root-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wxq-wildcard-tls
+  namespace: gateway
+spec:
+  secretName: wxq-wildcard-tls
+  duration: 8760h
+  renewBefore: 1440h
+  dnsNames:
+  - "*.wuxing.local"
+  - wuxing.local
+  issuerRef:
+    name: wxq-ca
+    kind: ClusterIssuer

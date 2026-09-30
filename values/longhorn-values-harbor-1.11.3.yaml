@@ -1,0 +1,314 @@
+global:
+  imageRegistry: harbor.wuxing.local
+  imagePullSecrets: []
+  timezone: ''
+  tolerations: []
+  nodeSelector: {}
+  cattle:
+    systemDefaultRegistry: ''
+    windowsCluster:
+      enabled: false
+      tolerations:
+      - key: cattle.io/os
+        value: linux
+        effect: NoSchedule
+        operator: Equal
+      nodeSelector:
+        kubernetes.io/os: linux
+      defaultSetting:
+        taintToleration: cattle.io/os=linux:NoSchedule
+        systemManagedComponentsNodeSelector: kubernetes.io/os:linux
+networkPolicies:
+  enabled: false
+  type: k3s
+image:
+  longhorn:
+    engine:
+      registry: ''
+      repository: longhorn/longhorn-engine
+      tag: v1.11.3
+    manager:
+      registry: ''
+      repository: longhorn/longhorn-manager
+      tag: v1.11.3
+    ui:
+      registry: ''
+      repository: longhorn/longhorn-ui
+      tag: v1.11.3
+    instanceManager:
+      registry: ''
+      repository: longhorn/longhorn-instance-manager
+      tag: v1.11.3
+    shareManager:
+      registry: ''
+      repository: longhorn/longhorn-share-manager
+      tag: v1.11.3
+    backingImageManager:
+      registry: ''
+      repository: longhorn/backing-image-manager
+      tag: v1.11.3
+    supportBundleKit:
+      registry: ''
+      repository: longhorn/support-bundle-kit
+      tag: v0.0.88
+  csi:
+    attacher:
+      registry: ''
+      repository: longhorn/csi-attacher
+      tag: v4.12.0
+    provisioner:
+      registry: ''
+      repository: longhorn/csi-provisioner
+      tag: v6.3.0
+    nodeDriverRegistrar:
+      registry: ''
+      repository: longhorn/csi-node-driver-registrar
+      tag: v2.17.0
+    resizer:
+      registry: ''
+      repository: longhorn/csi-resizer
+      tag: v2.2.0
+    snapshotter:
+      registry: ''
+      repository: longhorn/csi-snapshotter
+      tag: v8.6.0
+    livenessProbe:
+      registry: ''
+      repository: longhorn/livenessprobe
+      tag: v2.19.0
+  openshift:
+    oauthProxy:
+      registry: ''
+      repository: ''
+      tag: ''
+  pullPolicy: IfNotPresent
+service:
+  ui:
+    type: ClusterIP
+    nodePort: null
+    loadBalancerClass: ''
+    annotations: {}
+    labels: {}
+  manager:
+    type: ClusterIP
+    nodePort: ''
+persistence:
+  defaultClass: true
+  defaultFsType: ext4
+  defaultMkfsParams: ''
+  defaultClassReplicaCount: 3
+  defaultDataLocality: disabled
+  reclaimPolicy: Delete
+  volumeBindingMode: Immediate
+  migratable: false
+  disableRevisionCounter: 'true'
+  nfsOptions: ''
+  recurringJobSelector:
+    enable: false
+    jobList: []
+  backingImage:
+    enable: false
+    name: null
+    dataSourceType: null
+    dataSourceParameters: null
+    expectedChecksum: null
+  defaultDiskSelector:
+    enable: false
+    selector: ''
+  defaultNodeSelector:
+    enable: false
+    selector: ''
+  unmapMarkSnapChainRemoved: ignored
+  dataEngine: v1
+  backupTargetName: default
+preUpgradeChecker:
+  jobEnabled: true
+  upgradeVersionCheck: true
+csi:
+  kubeletRootDir: null
+  podAntiAffinityPreset: null
+  attacherReplicaCount: null
+  provisionerReplicaCount: null
+  resizerReplicaCount: null
+  snapshotterReplicaCount: null
+defaultSettings:
+  allowRecurringJobWhileVolumeDetached: null
+  createDefaultDiskLabeledNodes: null
+  defaultDataPath: null
+  defaultDataLocality: null
+  replicaSoftAntiAffinity: null
+  replicaAutoBalance: null
+  storageOverProvisioningPercentage: null
+  storageMinimalAvailablePercentage: null
+  storageReservedPercentageForDefaultDisk: null
+  upgradeChecker: null
+  upgradeResponderURL: null
+  managerUrl: null
+  defaultReplicaCount: null
+  defaultLonghornStaticStorageClass: null
+  failedBackupTTL: null
+  backupExecutionTimeout: null
+  restoreVolumeRecurringJobs: null
+  recurringSuccessfulJobsHistoryLimit: null
+  recurringFailedJobsHistoryLimit: null
+  recurringJobMaxRetention: null
+  supportBundleFailedHistoryLimit: null
+  taintToleration: null
+  systemManagedComponentsNodeSelector: null
+  systemManagedCSIComponentsResourceLimits: null
+  priorityClass: longhorn-critical
+  autoSalvage: null
+  autoDeletePodWhenVolumeDetachedUnexpectedly: null
+  blacklistForAutoDeletePodWhenVolumeDetachedUnexpectedly: null
+  disableSchedulingOnCordonedNode: null
+  replicaZoneSoftAntiAffinity: null
+  replicaDiskSoftAntiAffinity: null
+  nodeDownPodDeletionPolicy: null
+  nodeDrainPolicy: null
+  detachManuallyAttachedVolumesWhenCordoned: null
+  replicaReplenishmentWaitInterval: null
+  concurrentReplicaRebuildPerNodeLimit: null
+  rebuildConcurrentSyncLimit: null
+  concurrentVolumeBackupRestorePerNodeLimit: null
+  disableRevisionCounter: '{"v1":"true"}'
+  systemManagedPodsImagePullPolicy: null
+  allowVolumeCreationWithDegradedAvailability: null
+  autoCleanupSystemGeneratedSnapshot: null
+  autoCleanupRecurringJobBackupSnapshot: null
+  concurrentAutomaticEngineUpgradePerNodeLimit: null
+  backingImageCleanupWaitInterval: null
+  backingImageRecoveryWaitInterval: null
+  guaranteedInstanceManagerCPU: null
+  kubernetesClusterAutoscalerEnabled: null
+  orphanResourceAutoDeletion: null
+  orphanResourceAutoDeletionGracePeriod: null
+  storageNetwork: null
+  endpointNetworkForRWXVolume: null
+  deletingConfirmationFlag: null
+  engineReplicaTimeout: null
+  snapshotDataIntegrity: null
+  snapshotDataIntegrityImmediateCheckAfterSnapshotCreation: null
+  snapshotDataIntegrityCronjob: null
+  snapshotHeavyTaskConcurrentLimit: null
+  removeSnapshotsDuringFilesystemTrim: null
+  fastReplicaRebuildEnabled: null
+  replicaFileSyncHttpClientTimeout: null
+  longGRPCTimeOut: null
+  logLevel: null
+  logPath: null
+  backupCompressionMethod: null
+  backupConcurrentLimit: null
+  defaultBackupBlockSize: null
+  restoreConcurrentLimit: null
+  v1DataEngine: null
+  v2DataEngine: null
+  dataEngineHugepageEnabled: null
+  dataEngineMemorySize: null
+  dataEngineInterruptModeEnabled: null
+  dataEngineCPUMask: null
+  replicaRebuildingBandwidthLimit: null
+  defaultUblkQueueDepth: null
+  defaultUblkNumberOfQueue: null
+  instanceManagerPodLivenessProbeTimeout: null
+  allowEmptyNodeSelectorVolume: null
+  allowEmptyDiskSelectorVolume: null
+  allowCollectingLonghornUsageMetrics: null
+  disableSnapshotPurge: null
+  snapshotMaxCount: null
+  dataEngineLogLevel: null
+  dataEngineLogFlags: null
+  freezeFilesystemForSnapshot: null
+  autoCleanupSnapshotWhenDeleteBackup: null
+  autoCleanupSnapshotAfterOnDemandBackupCompleted: null
+  rwxVolumeFastFailover: null
+  offlineReplicaRebuilding: null
+  nodeDiskHealthMonitoring: null
+  csiAllowedTopologyKeys: null
+  csiStorageCapacityTracking: null
+defaultBackupStore:
+  backupTarget: null
+  backupTargetCredentialSecret: null
+  pollInterval: null
+privateRegistry:
+  createSecret: null
+  registryUrl: harbor.wuxing.local
+  registryUser: null
+  registryPasswd: null
+  registrySecret: null
+longhornManager:
+  log:
+    format: plain
+  distro: longhorn
+  priorityClass: longhorn-critical
+  tolerations: []
+  resources: null
+  nodeSelector: {}
+  serviceAnnotations: {}
+  serviceLabels: {}
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 100%
+longhornDriver:
+  log:
+    format: plain
+  priorityClass: longhorn-critical
+  tolerations: []
+  nodeSelector: {}
+longhornUI:
+  replicas: 2
+  priorityClass: longhorn-critical
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - longhorn-ui
+          topologyKey: kubernetes.io/hostname
+  tolerations: []
+  nodeSelector: {}
+ingress:
+  enabled: false
+  ingressClassName: null
+  host: sslip.io
+  extraHosts: []
+  tls: false
+  secureBackends: false
+  tlsSecret: longhorn.local-tls
+  path: /
+  pathType: ImplementationSpecific
+  annotations: null
+  secrets: null
+httproute:
+  enabled: false
+  parentRefs: []
+  hostnames: []
+  path: /
+  pathType: PathPrefix
+  annotations: {}
+enablePSP: false
+namespaceOverride: ''
+annotations: {}
+serviceAccount:
+  annotations: {}
+metrics:
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    annotations: {}
+    interval: ''
+    scrapeTimeout: ''
+    relabelings: []
+    metricRelabelings: []
+openshift:
+  enabled: false
+  ui:
+    route: longhorn-ui
+    port: 443
+    proxy: 8443
+enableGoCoverDir: false
+extraObjects: []

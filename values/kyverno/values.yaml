@@ -1,0 +1,51 @@
+# kyverno chart 3.9.1 (app v1.19.1) — 离线安装 values（镜像全部指向 Harbor）
+# 关键决策：
+#  1) webhook 一律不阻塞集群：config.forceFailurePolicyIgnore=true 把所有策略的
+#     failurePolicy 强制按 Ignore 处理；Kyverno 自管 webhook 在无匹配策略时本来
+#     就会收敛为 Ignore，此开关保证即使策略写错也不会 Fail 阻塞 Pod 创建。
+#  2) kube-system / kyverno 命名空间在 webhook namespaceSelector 里 NotIn 排除，
+#     核心组件不经过任何策略（也不会因注入导致滚动重启）。
+#  3) 关闭 reports-controller 与 background-controller（本场景只做准入期 mutate，
+#     background:false 策略不需要它们，减少 informer/负载）。
+#  4) 禁止 digest 引用，全部显式 tag（军规 3）。
+
+global:
+  image:
+    registry: harbor.wuxing.local
+
+config:
+  # webhook 域排除：kyverno 自身 + kube-system 绝不注入
+  webhooks:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - kyverno
+            - kube-system
+  # 安全阀：任何策略 failurePolicy 都按 Ignore 处理（策略故障不阻塞全集群 Pod 创建）
+features:
+  forceFailurePolicyIgnore:
+    enabled: true
+
+# 只保留准入控制主链路 + cleanup（轻量）；报告/后台扫描控制器关闭
+backgroundController:
+  enabled: false
+reportsController:
+  enabled: false
+
+admissionController:
+  replicas: 2
+  image:
+    tag: v1.19.1
+    initContainer:
+      tag: v1.19.1
+
+cleanupController:
+  image:
+    tag: v1.19.1
+
+# helm test 用的 readiness-checker
+test:
+  image:
+    tag: v1.19.1

@@ -1,0 +1,60 @@
+authentication:
+  mutual:
+    spire:
+      install:
+        agent:
+          image:
+            repository: harbor.wuxing.local/spiffe/spire-agent
+        initImage:
+          repository: harbor.wuxing.local/library/busybox
+        server:
+          image:
+            repository: harbor.wuxing.local/spiffe/spire-server
+certgen:
+  image:
+    repository: harbor.wuxing.local/cilium/certgen
+clustermesh:
+  apiserver:
+    image:
+      repository: harbor.wuxing.local/cilium/clustermesh-apiserver
+encryption:
+  ztunnel:
+    image:
+      repository: harbor.wuxing.local/istio/ztunnel
+envoy:
+  image:
+    repository: harbor.wuxing.local/cilium/cilium-envoy
+hubble:
+  relay:
+    image:
+      repository: harbor.wuxing.local/cilium/hubble-relay
+  ui:
+    backend:
+      image:
+        repository: harbor.wuxing.local/cilium/hubble-ui-backend
+    frontend:
+      image:
+        repository: harbor.wuxing.local/cilium/hubble-ui
+image:
+  repository: harbor.wuxing.local/cilium/cilium
+ipam:
+  operator:
+    clusterPoolIPv4MaskSize: 24
+    clusterPoolIPv4PodCIDRList:
+    - 10.233.64.0/18
+ipv4:
+  enabled: true
+ipv6:
+  enabled: false
+nodeinit:
+  image:
+    repository: harbor.wuxing.local/cilium/startup-script
+operator:
+  image:
+    repository: harbor.wuxing.local/cilium/operator
+preflight:
+  envoy:
+    image:
+      repository: harbor.wuxing.local/cilium/cilium-envoy
+  image:
+    repository: harbor.wuxing.local/cilium/cilium

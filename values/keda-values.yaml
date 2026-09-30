@@ -1,0 +1,20 @@
+# keda-values.yaml — KEDA 2.21.0 离线安装 values（Harbor 镜像，显式 tag 无 digest）
+# 用法: helm upgrade --install keda /data1/ssdxt/charts/keda-2.21.0.tgz -n keda --create-namespace -f /data1/ssdxt/values/keda-values.yaml
+
+image:
+  keda:
+    registry: harbor.wuxing.local
+    repository: keda/keda
+    tag: "2.21.0"
+  metricsApiServer:
+    registry: harbor.wuxing.local
+    repository: keda/keda-metrics-apiserver
+    tag: "2.21.0"
+  webhooks:
+    registry: harbor.wuxing.local
+    repository: keda/keda-admission-webhooks
+    tag: "2.21.0"
+  pullPolicy: IfNotPresent
+
+# 证书：保持默认自签（certManager.enabled=false），由 operator 自动向
+# v1beta1.external.metrics.k8s.io APIService 注入 CA，不依赖 cert-manager

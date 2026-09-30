@@ -1,0 +1,9 @@
+defaultSettings:
+  defaultReplicaCount: 2
+  defaultDataPath: /data1/longhorn
+  concurrentReplicaRebuildPerNodeLimit: 1
+  disableRevisionCounter: "true"
+  priorityClass: longhorn-critical
+persistence:
+  defaultClass: true
+  defaultClassReplicaCount: 2

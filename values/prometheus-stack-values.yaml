@@ -1,0 +1,114 @@
+alertmanager:
+  alertmanagerSpec:
+    priorityClassName: wxq-high
+    image:
+      registry: harbor.wuxing.local
+      repository: monitoring/alertmanager
+      tag: v0.27.0
+  image:
+    registry: harbor.wuxing.local
+    repository: monitoring/alertmanager
+    tag: v0.27.0
+grafana:
+  priorityClassName: wxq-default
+  # admin 密码固化（网页端改的会被 helm upgrade 覆盖，必须写这里）2026-09-30
+  adminPassword: "<GRAFANA_ADMIN_PASSWORD_BCRYPT>"
+  image:
+    registry: harbor.wuxing.local
+    repository: monitoring/grafana
+    tag: 11.2.0
+  initChownData:
+    image:
+      registry: harbor.wuxing.local
+      repository: library/busybox
+      tag: 1.38.0
+  sidecar:
+    image:
+      registry: harbor.wuxing.local
+      repository: monitoring/k8s-sidecar
+      tag: 1.27.4
+  extraEnv:
+  - name: GF_ANALYTICS_REPORTING_ENABLED
+    value: 'false'
+  - name: GF_ANALYTICS_CHECK_FOR_UPDATES
+    value: 'false'
+kube-state-metrics:
+  priorityClassName: wxq-high
+  image:
+    registry: harbor.wuxing.local
+    repository: monitoring/kube-state-metrics
+    tag: v2.13.0
+prometheus:
+  image:
+    registry: harbor.wuxing.local
+    repository: monitoring/prometheus
+    tag: v2.54.1
+  prometheusSpec:
+    priorityClassName: wxq-high
+    # ===== remote_write -> plant01（2026-09-30 从 02-remote-write.sh 的 kubectl patch 固化进 values）=====
+    # 等效 remote-write-desired.json；此后 helm upgrade 不再丢配置，02 脚本仅作应急恢复用
+    externalLabels:
+      cluster: wxq
+    remoteWrite:
+    - url: http://10.100.10.29:9091/api/v1/write
+      remoteTimeout: 60s
+      queueConfig:
+        batchSendDeadline: 60s
+        maxBackoff: 30s
+        maxSamplesPerSend: 2000
+        maxShards: 1
+        minBackoff: 500ms
+        minShards: 1
+        sampleAgeLimit: 1h
+      writeRelabelConfigs:
+      - action: keep
+        regex: (kubelet|node-exporter|kube-state-metrics|apiserver|etcd|kube-scheduler|kube-controller-manager|coredns|prometheus-stack-kube-prom-prometheus|prometheus-stack-kube-prom-alertmanager|prometheus-stack-kube-<GRAFANA_PASSWORD>)
+        sourceLabels: [job]
+      - action: drop
+        regex: .*_bucket
+        sourceLabels: [__name__]
+      - action: drop
+        regex: kubernetes_feature_enabled
+        sourceLabels: [__name__]
+      - action: drop
+        regex: ALERTS
+        sourceLabels: [__name__]
+      - action: drop
+        regex: ALERTS_FOR_STATE
+        sourceLabels: [__name__]
+      - action: drop
+        regex: count:up0
+        sourceLabels: [__name__]
+      - action: drop
+        regex: count:up1
+        sourceLabels: [__name__]
+    secrets:
+    - kube-etcd-client-certs
+    image:
+      registry: harbor.wuxing.local
+      repository: monitoring/prometheus
+      tag: v2.54.1
+prometheus-node-exporter:
+  image:
+    registry: harbor.wuxing.local
+    repository: monitoring/node-exporter
+    tag: v1.8.2
+  service:
+    port: 9101
+    targetPort: 9101
+prometheusOperator:
+  admissionWebhooks:
+    enabled: false
+  image:
+    registry: harbor.wuxing.local
+    repository: monitoring/prometheus-operator
+    tag: v0.76.1
+  prometheusConfigReloader:
+    image:
+      registry: harbor.wuxing.local
+      repository: monitoring/prometheus-config-reloader
+      tag: v0.76.1
+  tls:
+    enabled: false
+kubeProxy:
+  enabled: false

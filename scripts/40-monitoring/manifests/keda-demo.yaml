@@ -1,0 +1,51 @@
+# keda-demo.yaml — Prometheus 触发伸缩的活样例（保留在集群中供参考）
+# 链路：ScaledObject(prometheus trigger, query=sum(up), threshold=50)
+#   → KEDA operator 自动生成 HPA(keda-hpa-demo-prom)
+#   → keda-metrics-apiserver 暴露 external.metrics.k8s.io
+# 注意：不要与手写 HPA 并存；minReplicaCount=2 维持现副本数不扰动
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keda-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-nginx
+  namespace: keda-demo
+  labels: {app: demo-nginx}
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: demo-nginx}
+  template:
+    metadata:
+      labels: {app: demo-nginx}
+    spec:
+      containers:
+      - name: nginx
+        image: harbor.wuxing.local/library/nginx:latest   # Harbor library/nginx 现有镜像（tag 为 latest）
+        resources:
+          requests: {cpu: 10m, memory: 16Mi}
+          limits: {cpu: 100m, memory: 64Mi}
+        ports:
+        - containerPort: 80
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: demo-prom
+  namespace: keda-demo
+spec:
+  scaleTargetRef:
+    name: demo-nginx
+  pollingInterval: 15
+  minReplicaCount: 2
+  maxReplicaCount: 6
+  triggers:
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus-stack-kube-prom-prometheus.monitoring:9090
+      query: sum(up)          # 必然有值的查询，仅验证链路（本集群实测 ≈100）
+      threshold: "300"        # 大于当前查询值，避免演示负载被真实扩容

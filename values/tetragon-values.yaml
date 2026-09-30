@@ -1,0 +1,42 @@
+# Tetragon 1.7.1 离线安装 values —— 镜像全部指向 Harbor，显式 tag 无 digest
+tetragon:
+  image:
+    repository: harbor.wuxing.local/tetragon/tetragon
+    tag: v1.7.1
+  prometheus:
+    enabled: true
+    port: 2112
+    serviceMonitor:
+      enabled: true
+      labelsOverride:
+        release: prometheus-stack
+      scrapeInterval: 60s
+  # 默认 denylist 会丢弃 kube-system 事件，与我们 kube-system execve 观察策略冲突，
+  # 放开 kube-system；保留丢弃 host("") 与 cilium 事件以降噪
+  exportDenyList: |-
+    {"health_check":true}
+    {"namespace":["", "cilium"]}
+
+tetragonOperator:
+  image:
+    repository: harbor.wuxing.local/tetragon/tetragon-operator
+    tag: v1.7.1
+    pullPolicy: IfNotPresent
+  prometheus:
+    serviceMonitor:
+      enabled: true
+      labelsOverride:
+        release: prometheus-stack
+
+export:
+  mode: stdout
+  stdout:
+    image:
+      repository: harbor.wuxing.local/tetragon/hubble-export-stdout
+      tag: v1.1.1
+
+rthooks:
+  enabled: false
+  image:
+    repository: harbor.wuxing.local/tetragon/tetragon-rthooks
+    tag: v0.8
