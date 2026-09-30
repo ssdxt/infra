@@ -11,7 +11,7 @@
 | 命名空间 | `argocd` |
 | 访问地址 | **`https://argocd.wuxing.local:32298`**（2026-09-30 起，Gateway 终止 TLS，证书见 30-网络与CNI/gateway-https.md；工位 hosts: `10.100.10.10 argocd.wuxing.local`）。历史 NodePort `https://<节点IP>:30443` 已清理 |
 | 用户名 | `admin` |
-| 初始密码 | `<ARGOCD_INITIAL_PASSWORD>`（2025-09-29 安装时生成；改密后即失效，重取方式见下） |
+| 初始密码 | `cIqyWaYrmFfzi4qn`（2025-09-29 安装时生成；改密后即失效，重取方式见下） |
 | 安装清单 | control-01 `/data1/ssdxt/gitops/argocd-install-harbor.yaml`（已 Harbor 化） |
 | 安装脚本 | control-01 `/data1/ssdxt/gitops/01-install-argocd.sh`（幂等，可重跑） |
 
@@ -47,7 +47,7 @@ export HTTPS_PROXY=http://127.0.0.1:12450
 export NO_PROXY=harbor.wuxing.local,10.100.10.29
 # Harbor 项目不存在先建（幂等，409=已存在可忽略）
 curl -sk --noproxy '*' -X POST https://10.100.10.29/api/v2.0/projects \
-  -u 'admin:<HARBOR_PASSWORD>' -H 'Content-Type: application/json' \
+  -u 'admin:WxqHb@YtAby358zJ' -H 'Content-Type: application/json' \
   -d '{"project_name":"argocd","public":true}'
 for img in \
   quay.io/argoproj/argocd:v3.5.3 \
@@ -55,7 +55,7 @@ for img in \
   ghcr.io/dexidp/dex:v2.45.1 ; do
   name=$(basename "${img%:*}"); case "$img" in *docker/library/*) name=redis;; esac
   skopeo copy --override-arch amd64 --retry-times 3 \
-    --dest-tls-verify=false --dest-creds 'admin:<HARBOR_PASSWORD>' \
+    --dest-tls-verify=false --dest-creds 'admin:WxqHb@YtAby358zJ' \
     "docker://$img" "docker://10.100.10.29/argocd/${name}:${img##*:}"
 done
 ```
@@ -168,7 +168,95 @@ spec:
       - CreateNamespace=true
 ```
 
+### 7. 代理访问 GitHub（2026-09-30 配置）
+
+> 目标：让 ArgoCD 同步 `https://github.com/ssdxt/infra.git`（public 仓库，读取无需凭据）。
+> 代理走**集群内部代理 `http://10.100.10.14:8888`（tinyproxy 1.11.0）**，不依赖工作站 SakuraCat（其 12450 仅监听 127.0.0.1，未开 Allow LAN）。
+
+#### 精确改法（改前已备份）
+
+备份位置（control-01）：`/data1/ssdxt/gitops/backup/deploy-argocd-{repo-server,server}.yaml.bak.20260930`、
+`sts-argocd-application-controller.yaml.bak.20260930`。
+注意：**argocd-application-controller 是 StatefulSet 不是 Deployment**，`set env deploy/...` 会报 NotFound。
+
+```bash
+export KUBECONFIG=/etc/kubernetes/admin.conf
+NP="localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,10.233.0.0/16,10.96.0.0/12,10.100.10.0/24,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster.local,.wuxing.local,harbor.wuxing.local,10.100.10.29,argocd-redis,argocd-redis.argocd,argocd-redis.argocd.svc,argocd-repo-server,argocd-repo-server.argocd,argocd-repo-server.argocd.svc,argocd-server,argocd-server.argocd,argocd-server.argocd.svc,argocd-dex-server,argocd-notifications-controller,argocd-application-controller"
+for w in deploy/argocd-repo-server deploy/argocd-server sts/argocd-application-controller; do
+  kubectl -n argocd set env $w \
+    HTTPS_PROXY=http://10.100.10.14:8888 \
+    HTTP_PROXY=http://10.100.10.14:8888 \
+    NO_PROXY="$NP"
+done
+```
+
+**NO_PROXY 要点（踩坑实测）**：controller→repo-server 走 svc `argocd-repo-server.argocd.svc:8081`（非 443），
+仅靠 `.svc` 通配**实测未能**拦住 gRPC 代理化（tinyproxy 只放行 CONNECT 443/563 → 403 Access violation，
+app 卡 `failed to generate manifest ... 403`）；显式列出服务名 + `10.233.0.0/16` 大网段后才解决。
+NO_PROXY 宁多勿少，漏一个内部地址 ArgoCD 就整体故障。
+
+#### 回归验证（代理不破坏 ArgoCD 本体）
+
+```bash
+curl -sk --noproxy '*' -o /dev/null -w '%{http_code}' --resolve argocd.wuxing.local:32298:127.0.0.1 https://argocd.wuxing.local:32298/   # 实测 200
+kubectl -n argocd get pods   # controller-0 / repo-server / server 全 Running
+```
+（⚠️ control-01 宿主机到 ClusterIP 不通属本集群既有特性，回归请走 Gateway 入口。）
+
+#### 添加仓库（声明式，control-01 无 argocd CLI）
+
+```bash
+kubectl -n argocd create secret generic infra-github-repo \
+  --from-literal=type=git --from-literal=url=https://github.com/ssdxt/infra.git \
+  --dry-run=client -o yaml > /tmp/s.yaml
+# 手工在 metadata 加 labels: argocd.argoproj.io/secret-type: repository 后：
+kubectl apply -f /tmp/s.yaml
+```
+
+#### 最小同步示例（Application，仓库内已有 `apps/demo/configmap.yaml`，commit 6243106）
+
+```bash
+cat <<'EOF' | kubectl apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-sync
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ssdxt/infra.git
+    targetRevision: main
+    path: apps/demo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+EOF
+```
+
+#### ⚠️ 风险与现状（2026-09-30）
+
+- **代理挂了 = ArgoCD 刷新 GitHub 失败**（app 卡 `failed to list refs ... timeout`）；已部署应用不受影响，只是不能同步新变更。
+- **当前状态：链路已配置但不可用**——tinyproxy `CONNECT github.com:443` 秒回 200 后**持续 0 字节黑洞**
+  （control-01 / pod / 工作站三侧实测 0/10 成功），即 .14 tinyproxy 的**上游出网链路故障**，需运维修复 .14。
+  对照：工作站本机 SakuraCat（127.0.0.1:12450）同刻访问 GitHub 完全正常（完整 200 OK）。
+- demo Application 验证后已删除（`kubectl -n argocd delete app demo-sync --cascade`）；仓库 secret `infra-github-repo` 保留。
+- **替代方案**（若 .14 不修）：① SakuraCat 开 Allow LAN 后把 env 指向 `http://10.100.200.128:12450`；
+  ② 部署内网 Gitea，repoURL 指向内网（无需任何代理）。
+
+#### 回滚（恢复无代理状态）
+
+```bash
+kubectl -n argocd set env deploy/argocd-repo-server deploy/argocd-server sts/argocd-application-controller \
+  HTTPS_PROXY- HTTP_PROXY- NO_PROXY-
+# 或：kubectl apply -f /data1/ssdxt/gitops/backup/*.bak.20260930
+```
+
 ### 常见坑（本环境实测）
+
+6. **给 ArgoCD 配代理时 kubectl 也会被劫持** —— 控制端 shell 导出 `HTTPS_PROXY` 后，`kubectl` 连 apiserver（`10.100.10.250:6443`）会被 tinyproxy 以 "Access violation" 拒掉（CONNECT 非 443/563 端口）。操作时给 kubectl 侧补 `NO_PROXY=10.100.10.250,10.100.10.10` 或分开展开代理变量。
 
 1. **redis 镜像源是 `public.ecr.aws/docker/library/redis` 不是 `docker.io/library/redis`** —— 解析镜像清单时两个都要映射，否则漏搬。
 2. **客户端 `kubectl apply` 大 CRD 报错 `metadata.annotations: Too long: may not be more than 262144 bytes`**（applicationsets CRD 的 last-applied 注解超 256KB）—— 必须用 `kubectl apply --server-side --force-conflicts`。现象：apply 中途断掉，一半资源已建。
